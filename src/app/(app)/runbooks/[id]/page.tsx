@@ -326,7 +326,7 @@ function StepOptions({ step, onChange }: { step: RunbookStep; onChange: (s: Runb
           </Select>
         </label>
         <label className="flex items-center gap-2">
-          <input type="checkbox" className="accent-[#5b5fc7]" checked={w.required} onChange={(e) => onChange({ ...step, with: { ...w, required: e.target.checked } })} />
+          <input type="checkbox" className="accent-[#2a6fcc]" checked={w.required} onChange={(e) => onChange({ ...step, with: { ...w, required: e.target.checked } })} />
           Required — failing tests block deployment
         </label>
       </div>
@@ -337,7 +337,7 @@ function StepOptions({ step, onChange }: { step: RunbookStep; onChange: (s: Runb
     return (
       <div className={row}>
         <label className="flex items-center gap-2">
-          <input type="checkbox" className="accent-[#5b5fc7]" checked={required} onChange={(e) => onChange({ ...step, with: { required: e.target.checked } })} />
+          <input type="checkbox" className="accent-[#2a6fcc]" checked={required} onChange={(e) => onChange({ ...step, with: { required: e.target.checked } })} />
           Required — fail the execution if verification does not complete
         </label>
       </div>

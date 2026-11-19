@@ -17,7 +17,7 @@ import {
   ShieldCheck,
   Workflow,
 } from "lucide-react";
-import { Logo } from "@/components/shell";
+import { Logo, LogoMark } from "@/components/shell";
 
 export const metadata = {
   title: "4ORGE — Smart contract deployment workspace for QIE",
@@ -97,14 +97,14 @@ export default function LandingPage() {
 
       {/* Hero */}
       <section className="relative">
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 -z-0 h-[720px] bg-[radial-gradient(ellipse_60%_50%_at_20%_10%,#fbe4ec_0%,transparent_60%),radial-gradient(ellipse_55%_50%_at_80%_0%,#e3e4fb_0%,transparent_60%)]" />
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 -z-0 h-[720px] bg-[radial-gradient(ellipse_60%_50%_at_20%_10%,#fbe4ec_0%,transparent_60%),radial-gradient(ellipse_55%_50%_at_80%_0%,#dde9fb_0%,transparent_60%)]" />
         <div className="relative mx-auto max-w-[1200px] px-4 pt-16 pb-10 text-center sm:px-8 sm:pt-24">
           <span className="inline-flex items-center gap-2 rounded-full bg-panel px-3.5 py-1.5 text-[13px] text-muted shadow-card">
             <span className="size-1.5 rounded-full bg-accent" />
             Developer infrastructure for QIE Blockchain
           </span>
           <h1 className="mx-auto mt-6 max-w-4xl text-[40px] leading-[1.05] font-medium tracking-[-0.03em] text-text sm:text-[64px]">
-            Compile, test and deploy to QIE <span className="text-accent">from one workspace.</span>
+            Compile, test and deploy to QIE <span className="text-brand">from one workspace.</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-[17px] leading-relaxed text-muted">
             4ORGE replaces the pile of scripts, terminals and spreadsheets between your Solidity code and a verified deployment.
@@ -274,19 +274,19 @@ export default function LandingPage() {
       <section id="security" className="mx-auto max-w-[1200px] scroll-mt-20 px-4 py-24 sm:px-8">
         <div className="rounded-[28px] bg-ink px-6 py-14 text-white sm:px-12">
           <div className="max-w-2xl">
-            <p className="text-[13px] font-medium tracking-wide text-[#b9bbf3] uppercase">Security</p>
+            <p className="text-[13px] font-medium tracking-wide text-[#9cc3f4] uppercase">Security</p>
             <h2 className="mt-3 text-[34px] leading-tight font-medium tracking-[-0.02em] sm:text-[42px]">Built to be trusted with real deployments.</h2>
           </div>
           <div className="mt-12 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
             {GUARANTEES.map(({ icon: Icon, title, body }) => (
               <div key={title}>
-                <span className="flex size-10 items-center justify-center rounded-full bg-white/10"><Icon className="size-[18px] text-[#d9dafb]" /></span>
+                <span className="flex size-10 items-center justify-center rounded-full bg-white/10"><Icon className="size-[18px] text-[#cfe1fb]" /></span>
                 <h3 className="mt-4 text-[16px] font-medium">{title}</h3>
                 <p className="mt-1.5 text-[14px] leading-relaxed text-white/65">{body}</p>
               </div>
             ))}
           </div>
-          <Link href="/docs/architecture" className="mt-12 inline-flex items-center gap-2 text-[14px] font-medium text-[#d9dafb] hover:text-white">
+          <Link href="/docs/architecture" className="mt-12 inline-flex items-center gap-2 text-[14px] font-medium text-[#cfe1fb] hover:text-white">
             Read the security model <ArrowRight className="size-4" />
           </Link>
         </div>
@@ -314,11 +314,14 @@ export default function LandingPage() {
       {/* CTA */}
       <section className="mx-auto max-w-[1200px] px-4 pb-24 sm:px-8">
         <div className="flex flex-col items-start gap-6 rounded-[28px] bg-pastel-lilac px-6 py-12 sm:px-12 md:flex-row md:items-center md:justify-between">
-          <div>
+          <div className="flex items-center gap-6">
+            <span className="hidden size-20 shrink-0 items-center justify-center rounded-3xl bg-panel shadow-card sm:flex"><LogoMark className="h-12 w-[53px]" /></span>
+            <div>
             <h2 className="text-[28px] leading-tight font-medium tracking-[-0.02em] sm:text-[34px]">Ship your next contract with confidence.</h2>
             <p className="mt-2 text-[15px] text-muted">Runs locally with one command. No account needed to try it.</p>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex shrink-0 flex-wrap gap-3">
             <Link href="/dashboard" className="inline-flex h-12 items-center gap-2 rounded-full bg-ink px-6 text-[15px] font-medium text-white hover:bg-[#2a2a35]">
               Open workspace <ArrowRight className="size-4" />
             </Link>

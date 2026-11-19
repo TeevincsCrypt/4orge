@@ -14,7 +14,7 @@ const VARIANTS: Record<Variant, string> = {
   secondary: "bg-panel text-text border border-line-strong hover:border-[#c8c8d8] hover:bg-panel-2",
   ghost: "text-muted hover:text-text hover:bg-panel-3",
   danger: "bg-panel text-bad border border-bad/30 hover:bg-bad/5",
-  soft: "bg-accent-soft text-accent-strong hover:bg-[#dcdef9]",
+  soft: "bg-accent-soft text-accent-strong hover:bg-[#d6e5fb]",
 };
 
 export function Button({
@@ -210,7 +210,7 @@ export function Callout({ tone = "neutral", title, children, className }: { tone
     warn: "bg-[#fdf6e8] text-[#8a5a12] border-[#f3e2bd]",
     bad: "bg-[#fdeef2] text-[#a92f53] border-[#f6d3dd]",
     ok: "bg-[#eaf7f0] text-[#17774b] border-[#cfecdd]",
-    blue: "bg-accent-soft/70 text-accent-strong border-[#d9dbf7]",
+    blue: "bg-accent-soft/70 text-accent-strong border-[#cfe0f8]",
   }[tone];
   const Icon = tone === "bad" ? XCircle : tone === "warn" ? AlertTriangle : tone === "ok" ? CheckCircle2 : Info;
   return (
@@ -343,7 +343,7 @@ export function Stat({ label, value, hint, icon, tone }: { label: string; value:
   );
 }
 
-const AVATAR_TINTS = ["#fbe4ec", "#e7e8fb", "#e3f4ee", "#fdf1dc", "#e3ebfb", "#f1e6f7"];
+const AVATAR_TINTS = ["#fbe4ec", "#e5eefc", "#e3f4ee", "#fdf1dc", "#e3ebfb", "#f1e6f7"];
 
 /** Initials avatar on a pastel tint chosen deterministically from the name. */
 export function Avatar({ name, size = 36, className }: { name: string; size?: number; className?: string }) {

@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/brand/4orge-banner.png" alt="4ORGE" width="640"></p>
+
 # 4ORGE
 
 **Your complete smart contract deployment and automation workspace for QIE.**
@@ -129,6 +131,7 @@ See the [deployment guide](docs/deployment-guide.md) for hosting.
 - [API reference](docs/api.md)
 - [Deployment guide](docs/deployment-guide.md)
 - [Development progress log](docs/PROGRESS.md)
+- [Brand assets & logo usage](docs/brand/README.md)
 
 The same documents are available inside the app under **Documentation**.
 

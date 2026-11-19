@@ -46,21 +46,35 @@ const NAV_SECONDARY: NavItem[] = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
+/** Official 4ORGE "4F" mark (vector trace of the brand logo; source in docs/brand). */
+export function LogoMark({ className }: { className?: string }) {
+  const gid = `forge-4-${useId().replace(/:/g, "")}`;
+  return (
+    <svg viewBox="100 334 632 574" className={cn("shrink-0", className)} aria-hidden>
+      <defs>
+        <linearGradient id={gid} x1="0" y1="0" x2="0.35" y2="1">
+          <stop offset="0" stopColor="#7b7d83" />
+          <stop offset="0.45" stopColor="#55585f" />
+          <stop offset="1" stopColor="#383b44" />
+        </linearGradient>
+      </defs>
+      <path fill={`url(#${gid})`} stroke="#2e3036" strokeWidth="3" fillRule="evenodd" d="M408 338 L408 852 L359 905 L358 702 L103 702 Z M358 478 L358 645 L215 645 Z" />
+      <path fill="#3d89e9" d="M452 408 L728 408 L690 461 L502 461 L502 550 L452 600 Z" />
+      <path fill="#3d89e9" d="M452 647 L507 592 L609 592 L632 548 L688 548 L639 646 L502 646 L502 755 L409 855 L409 778 L452 735 Z" />
+    </svg>
+  );
+}
+
 export function Logo({ className, compact }: { className?: string; compact?: boolean }) {
-  const gid = `forge-g-${useId().replace(/:/g, "")}`;
   return (
     <span className={cn("flex items-center gap-2.5", className)}>
-      <svg viewBox="0 0 32 32" className="size-8 shrink-0" aria-hidden>
-        <defs>
-          <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#ffffff" />
-            <stop offset="1" stopColor="#d9dafb" />
-          </linearGradient>
-        </defs>
-        <rect x="0" y="0" width="32" height="32" rx="9" fill="#14141b" />
-        <path d="M18.5 7 9 18.5h7.5V25h3v-6.5H23v-3h-3.5V7h-1Zm-2 8.5h-3.1l3.1-3.8v3.8Z" fill={`url(#${gid})`} />
-      </svg>
-      {!compact && <span className="text-[19px] font-semibold tracking-tight text-text">4orge</span>}
+      <LogoMark className="h-8 w-[35px]" />
+      {!compact && (
+        <span className="text-[19px] font-semibold tracking-[0.06em] text-[#2b2d33]">
+          4<span className="text-[#3d89e9]">ORGE</span>
+        </span>
+      )}
+      {compact && <span className="sr-only">4ORGE</span>}
     </span>
   );
 }

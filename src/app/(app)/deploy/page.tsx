@@ -162,11 +162,11 @@ function DeployWizard() {
             <CardHeader title="Workflow" />
             <div className="space-y-4 p-5 text-sm">
               <label className="flex items-start gap-2 text-muted">
-                <input type="checkbox" className="mt-1 accent-[#5b5fc7]" checked={runTests && hasTests} disabled={!hasTests} onChange={(e) => setRunTests(e.target.checked)} />
+                <input type="checkbox" className="mt-1 accent-[#2a6fcc]" checked={runTests && hasTests} disabled={!hasTests} onChange={(e) => setRunTests(e.target.checked)} />
                 <span>Run tests first (required to pass){!hasTests && bundle.data && <span className="block text-xs text-warn">No tests in this project — consider generating one.</span>}</span>
               </label>
               <label className="flex items-start gap-2 text-muted">
-                <input type="checkbox" className="mt-1 accent-[#5b5fc7]" checked={confirmStep} onChange={(e) => setConfirmStep(e.target.checked)} />
+                <input type="checkbox" className="mt-1 accent-[#2a6fcc]" checked={confirmStep} onChange={(e) => setConfirmStep(e.target.checked)} />
                 Pause for my review before the wallet prompt
               </label>
               <ol className="space-y-1 border-t border-line pt-3 text-xs text-muted">

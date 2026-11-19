@@ -119,7 +119,7 @@ export function ActivityChart({ events }: { events: TimelineEvent[] }) {
                     <div
                       className={cn(
                         "absolute bottom-0 w-full max-w-[64px] rounded-t-xl rounded-b-md transition-[height,background-color]",
-                        emphasised ? "bg-accent/85" : hover === i ? "bg-accent-mid" : "bg-[#dfe0f8]",
+                        emphasised ? "bg-brand" : hover === i ? "bg-accent-mid" : "bg-[#dbe7f8]",
                       )}
                       style={{ height: `${Math.max(h, d.value ? 3 : 0)}%` }}
                       aria-hidden

@@ -17,19 +17,21 @@
   --muted: #6c6c80;
   --faint: #9b9bad;
   --ink: #14141b;         /* primary buttons */
-  --accent: #5b5fc7;      /* periwinkle (validated vs white) */
-  --accent-strong: #4a4eb3;
-  --accent-soft: #e7e8fb;
-  --accent-mid: #c9cbf2;
-  --blue: #3f6fd9;
-  --blue-strong: #2f5cc4;
+  --brand: #3d89e9;       /* logo blue */
+  --brand-graphite: #45484f; /* logo "4" */
+  --accent: #2a6fcc;      /* UI accent: logo blue deepened to 4.95:1 on white */
+  --accent-strong: #2360b8;
+  --accent-soft: #e5eefc;
+  --accent-mid: #b9d3f5;
+  --blue: #2a6fcc;
+  --blue-strong: #2360b8;
   --rose: #d6416b;
   --ok: #1f9d63;
   --warn: #b7791f;
   --bad: #d6416b;
   --pastel-pink: linear-gradient(120deg, #fbe4ec 0%, #f6e7f3 100%);
-  --pastel-lilac: linear-gradient(120deg, #f1e6f7 0%, #e4e4fa 100%);
-  --pastel-blue: linear-gradient(120deg, #e6e7fb 0%, #e3ebfb 100%);
+  --pastel-lilac: linear-gradient(120deg, #eee8f8 0%, #e3e9fa 100%);
+  --pastel-blue: linear-gradient(120deg, #e2ecfc 0%, #e4f1fb 100%);
   --pastel-mint: linear-gradient(120deg, #e3f4ee 0%, #e6f0fa 100%);
   --shadow-card: 0 1px 2px rgba(22, 22, 40, 0.04), 0 8px 24px -12px rgba(22, 22, 40, 0.08);
   --shadow-pop: 0 2px 6px rgba(22, 22, 40, 0.06), 0 18px 40px -16px rgba(22, 22, 40, 0.22);
@@ -48,6 +50,8 @@
   --color-muted: var(--muted);
   --color-faint: var(--faint);
   --color-ink: var(--ink);
+  --color-brand: var(--brand);
+  --color-brand-graphite: var(--brand-graphite);
   --color-accent: var(--accent);
   --color-accent-strong: var(--accent-strong);
   --color-accent-soft: var(--accent-soft);
@@ -103,7 +107,7 @@ body {
 
 /* Diagonal hatch used for chart tracks (texture, not color, carries "empty"). */
 .hatch {
-  background-image: repeating-linear-gradient(135deg, rgba(91, 95, 199, 0.07) 0 2px, transparent 2px 8px);
+  background-image: repeating-linear-gradient(135deg, rgba(61, 137, 233, 0.08) 0 2px, transparent 2px 8px);
 }
 
 /* Rendered Markdown (documentation pages and execution reports). */

@@ -79,7 +79,7 @@ export function ProjectSettings({ bundle, onChanged }: { bundle: ProjectBundle; 
             </div>
           </div>
           <label className="flex items-center gap-2 text-sm text-muted">
-            <input type="checkbox" checked={compiler.viaIR} onChange={(e) => setCompiler({ ...compiler, viaIR: e.target.checked })} className="accent-[#8b5cf6]" />
+            <input type="checkbox" checked={compiler.viaIR} onChange={(e) => setCompiler({ ...compiler, viaIR: e.target.checked })} className="accent-[#5b5fc7]" />
             Compile via IR (viaIR)
           </label>
           <p className="text-xs text-faint">QIE is EVM-compatible. If deployments fail with “invalid opcode”, try an older EVM version such as “paris” (no PUSH0).</p>

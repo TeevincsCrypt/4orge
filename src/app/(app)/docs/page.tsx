@@ -13,7 +13,7 @@ export default function DocsIndex() {
       </div>
       <div className="grid gap-3 md:grid-cols-2">
         {DOCS.map((d) => (
-          <Link key={d.slug} href={`/docs/${d.slug}`} className="rounded-lg border border-line bg-panel p-4 hover:border-line-strong hover:bg-panel-2">
+          <Link key={d.slug} href={`/docs/${d.slug}`} className="rounded-2xl border border-line/70 bg-panel p-5 shadow-card hover:border-line-strong hover:bg-panel-2">
             <div className="flex items-center gap-2 text-sm font-semibold text-text"><BookOpen className="size-4 text-faint" />{d.title}</div>
             <p className="mt-1 text-sm text-muted">{d.summary}</p>
           </Link>

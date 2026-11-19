@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { DEFAULT_NETWORK_ID, getNetwork, isNetworkId, type ForgeNetwork, type NetworkFlags, type NetworkId } from "@/lib/networks";
 import { api } from "@/lib/client/api";
 
@@ -75,16 +75,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     })();
   }, [reloadNetworks]);
 
+  // Only the latest request may update the status: a slow check for a previously
+  // selected network must not overwrite the current one.
+  const latestCheck = useRef(0);
   const refreshRpc = useCallback(async () => {
+    const ticket = ++latestCheck.current;
     setRpcChecking(true);
+    let next: RpcStatus;
     try {
-      const s = await api<{ rpc: RpcStatus }>(`/networks/${networkId}/status`);
-      setRpcStatus(s.rpc);
+      next = (await api<{ rpc: RpcStatus }>(`/networks/${networkId}/status`)).rpc;
     } catch (e) {
-      setRpcStatus({ ok: false, actualChainId: null, expectedChainId: getNetwork(networkId).chainId, blockNumber: null, latencyMs: null, error: (e as Error).message, rpcUrl: "" });
-    } finally {
-      setRpcChecking(false);
+      next = { ok: false, actualChainId: null, expectedChainId: getNetwork(networkId).chainId, blockNumber: null, latencyMs: null, error: (e as Error).message, rpcUrl: "" };
     }
+    if (ticket !== latestCheck.current) return;
+    setRpcStatus(next);
+    setRpcChecking(false);
   }, [networkId]);
 
   useEffect(() => {

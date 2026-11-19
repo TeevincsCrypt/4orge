@@ -94,7 +94,7 @@ export default function RunbooksPage() {
       {data && data.runbooks.length > 0 && (
         <div className="grid gap-3 md:grid-cols-2">
           {data.runbooks.map((r) => (
-            <Link key={r.id} href={`/runbooks/${r.id}`} className="rounded-lg border border-line bg-panel p-4 hover:border-line-strong hover:bg-panel-2">
+            <Link key={r.id} href={`/runbooks/${r.id}`} className="rounded-2xl border border-line/70 bg-panel p-5 shadow-card hover:border-line-strong hover:bg-panel-2">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="truncate text-sm font-semibold text-text">{r.name}</div>

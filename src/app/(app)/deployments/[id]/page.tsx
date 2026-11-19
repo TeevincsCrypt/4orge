@@ -62,7 +62,7 @@ export default function DeploymentPage() {
       />
       {d.status === "failed" && d.failureReason && <Callout tone="bad" className="mb-4" title="Deployment failed">{d.failureReason}</Callout>}
       {d.status === "pending" && <Callout tone="blue" className="mb-4">Waiting for the transaction to be confirmed by the network. Its Runbook execution keeps checking the receipt.</Callout>}
-      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-6">
           <Card padded={false}>
             <CardHeader title="On-chain record" />

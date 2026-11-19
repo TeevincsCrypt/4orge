@@ -44,7 +44,7 @@ function Settings() {
     <>
       <PageHeader title="Settings" description="Workspace preferences, integrations and server configuration." />
       {ghMsg && <Callout tone={ghMsg.tone} className="mb-4">{ghMsg.text}</Callout>}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
         <Card padded={false}>
           <CardHeader title="Preferences" />
           <form
@@ -81,7 +81,7 @@ function Settings() {
             {!gh.data ? <p>Checking…</p> : !gh.data.configured ? (
               <>
                 <p>OAuth is not configured. Public repositories can still be imported.</p>
-                <p className="text-xs">To enable it, create a GitHub OAuth App with callback URL <span className="mono text-text">{typeof window !== "undefined" ? window.location.origin : ""}/api/github/oauth/callback</span>, then set <span className="mono text-text">GITHUB_CLIENT_ID</span>, <span className="mono text-text">GITHUB_CLIENT_SECRET</span> and a 32+ character <span className="mono text-text">FORGE_SESSION_SECRET</span> in <span className="mono text-text">.env.local</span> and restart. See docs → Deployment guide.</p>
+                <p className="text-xs">To enable it, create a GitHub OAuth App with callback URL <span className="mono break-all text-text">{typeof window !== "undefined" ? window.location.origin : ""}/api/github/oauth/callback</span>, then set <span className="mono text-text">GITHUB_CLIENT_ID</span>, <span className="mono text-text">GITHUB_CLIENT_SECRET</span> and a 32+ character <span className="mono text-text">FORGE_SESSION_SECRET</span> in <span className="mono text-text">.env.local</span> and restart. See docs → Deployment guide.</p>
               </>
             ) : gh.data.connected ? (
               <>
@@ -89,7 +89,7 @@ function Settings() {
                 <Button size="sm" variant="danger" onClick={async () => { await api("/github/disconnect", { method: "POST", body: {} }); await gh.reload(); }}>Disconnect</Button>
               </>
             ) : (
-              <a href="/api/github/oauth/start" className="inline-flex h-9 items-center gap-2 rounded-md bg-accent px-3.5 text-sm font-medium text-white"><GitBranch className="size-4" />Connect GitHub</a>
+              <a href="/api/github/oauth/start" className="inline-flex h-10 items-center gap-2 rounded-full bg-ink px-4 text-sm font-medium text-white hover:bg-[#2a2a35]"><GitBranch className="size-4" />Connect GitHub</a>
             )}
           </div>
         </Card>

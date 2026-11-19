@@ -65,7 +65,7 @@ npm install
 npm run dev
 ```
 
-Open **http://localhost:3000**. That's it: with no configuration, 4ORGE runs in **local mode**. It is a single-user workspace whose data lives in the `.forge-data/` folder on your computer, and it only accepts connections from your own machine.
+Open **http://localhost:3000** to see the landing page, then click **Open workspace**. That's it: with no configuration, 4ORGE runs in **local mode**. It is a single-user workspace whose data lives in the `.forge-data/` folder on your computer, and it only accepts connections from your own machine.
 
 > `npm install` also installs the Hardhat toolchain used for tests (in `runner/`). If that step was interrupted, run `npm run setup:runner`.
 

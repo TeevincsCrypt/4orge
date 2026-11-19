@@ -26,7 +26,7 @@ export function TestsPanel({ bundle, onChanged }: { bundle: ProjectBundle; onCha
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
       <div className="space-y-4">
         <Card className="flex flex-wrap items-center gap-3">
           <div className="min-w-0 flex-1">
@@ -75,7 +75,7 @@ export function TestsPanel({ bundle, onChanged }: { bundle: ProjectBundle; onCha
               {[...suites.entries()].map(([suite, cases]) => (
                 <div key={suite}>
                   <div className="mb-1.5 text-xs font-medium text-muted">{suite}</div>
-                  <ul className="divide-y divide-line rounded-md border border-line">
+                  <ul className="divide-y divide-line rounded-xl border border-line">
                     {cases.map((c, i) => (
                       <li key={i} className="px-3 py-2">
                         <div className="flex items-center gap-2 text-sm">
@@ -83,7 +83,7 @@ export function TestsPanel({ bundle, onChanged }: { bundle: ProjectBundle; onCha
                           <span className="mono text-[13px] text-text">{c.name}</span>
                           {c.durationMs !== null && <span className="ml-auto text-xs text-faint">{c.durationMs} ms</span>}
                         </div>
-                        {c.error && <pre className="mono mt-2 overflow-x-auto whitespace-pre-wrap rounded bg-bad/[0.06] p-2.5 text-[12px] text-[#f6a7a7]">{c.error}</pre>}
+                        {c.error && <pre className="mono mt-2 overflow-x-auto whitespace-pre-wrap rounded bg-[#fdeef2] p-2.5 text-[12px] text-[#a92f53]">{c.error}</pre>}
                       </li>
                     ))}
                   </ul>

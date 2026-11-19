@@ -18,7 +18,7 @@ export function BuildPanel({ bundle, onChanged }: { bundle: ProjectBundle; onCha
   const shown = result?.build ?? bundle.lastBuild;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
       <div className="space-y-4">
         <Card className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -84,7 +84,7 @@ function BuildResult({ build, contracts }: { build: BuildSummary; contracts: Con
         {build.warnings.length > 0 && <Messages title={`${build.warnings.length} warning(s)`} messages={build.warnings} tone="warn" />}
         {build.status === "succeeded" && build.warnings.length === 0 && <Callout tone="ok">Compiled without errors or warnings.</Callout>}
         {contracts.length > 0 && (
-          <div className="overflow-x-auto rounded-md border border-line">
+          <div className="overflow-x-auto rounded-xl border border-line">
             <table className="w-full min-w-[520px] text-left text-sm">
               <thead>
                 <tr className="bg-panel-2 text-xs text-muted">

@@ -12,5 +12,5 @@ export async function GET(req: Request) {
     if (error) return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, req.url));
   }
   const next = url.searchParams.get("next");
-  return NextResponse.redirect(new URL(next && next.startsWith("/") && !next.startsWith("//") ? next : "/", req.url));
+  return NextResponse.redirect(new URL(next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard", req.url));
 }

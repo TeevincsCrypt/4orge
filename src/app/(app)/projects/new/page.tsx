@@ -42,7 +42,7 @@ function FromTemplate() {
   const [error, setError] = useState<string | null>(null);
   return (
     <form
-      className="grid gap-6 lg:grid-cols-[1fr_340px]"
+      className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_340px]"
       onSubmit={async (e) => {
         e.preventDefault();
         setBusy(true);
@@ -63,8 +63,8 @@ function FromTemplate() {
             key={t.id}
             onClick={() => setTemplate(t.id)}
             className={cn(
-              "relative rounded-lg border p-4 text-left transition-colors",
-              template === t.id ? "border-accent/60 bg-accent/[0.06]" : "border-line bg-panel hover:border-line-strong",
+              "relative rounded-2xl border p-5 text-left shadow-card transition-colors",
+              template === t.id ? "border-accent/50 bg-panel ring-4 ring-accent/10" : "border-line/70 bg-panel hover:border-line-strong",
             )}
           >
             {template === t.id && <Check className="absolute right-3 top-3 size-4 text-accent-strong" />}
@@ -103,7 +103,7 @@ function FromGithub() {
   const [error, setError] = useState<string | null>(null);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
       <Card className="space-y-4">
         <form
           className="space-y-4"
@@ -134,7 +134,7 @@ function FromGithub() {
         {repos.data && repos.data.repositories.length > 0 && (
           <div>
             <div className="mb-2 text-xs font-medium text-muted">Your repositories</div>
-            <ul className="max-h-80 divide-y divide-line overflow-y-auto rounded-md border border-line">
+            <ul className="max-h-80 divide-y divide-line overflow-y-auto rounded-xl border border-line">
               {repos.data.repositories.map((r) => (
                 <li key={r.fullName}>
                   <button type="button" onClick={() => setRepository(r.fullName)} className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-panel-2">
@@ -203,12 +203,12 @@ function FromUpload() {
 
   const sol = files.filter((f) => f.path.endsWith(".sol")).length;
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
       <Card>
         <button
           type="button"
           onClick={() => input.current?.click()}
-          className="flex w-full flex-col items-center justify-center rounded-lg border border-dashed border-line-strong px-6 py-12 text-center hover:border-accent/50 hover:bg-panel-2"
+          className="flex w-full flex-col items-center justify-center rounded-2xl border border-dashed border-line-strong px-6 py-12 text-center hover:border-accent/50 hover:bg-panel-2"
         >
           <FolderUp className="mb-2 size-6 text-muted" />
           <span className="text-sm font-medium text-text">Choose a project folder</span>
@@ -227,7 +227,7 @@ function FromUpload() {
             <div className="mb-2 text-xs text-muted">
               {files.length} files selected ({sol} Solidity) · {ignored} ignored
             </div>
-            <div className="mono max-h-64 overflow-y-auto rounded-md border border-line bg-panel-2 p-2 text-[12px] text-muted">
+            <div className="mono max-h-64 overflow-y-auto rounded-xl border border-line bg-panel-2 p-2 text-[12px] text-muted">
               {files.slice(0, 300).map((f) => <div key={f.path}>{f.path}</div>)}
             </div>
           </div>

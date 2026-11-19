@@ -17,7 +17,7 @@ export function AbiTable({ abi }: { abi: AbiItem[] }) {
   const sorted = [...abi].sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type));
   if (!sorted.length) return <p className="text-sm text-muted">Empty ABI.</p>;
   return (
-    <div className="overflow-x-auto rounded-md border border-line">
+    <div className="overflow-x-auto rounded-xl border border-line">
       <table className="w-full min-w-[520px] text-left text-[13px]">
         <tbody>
           {sorted.map((item, i) => (

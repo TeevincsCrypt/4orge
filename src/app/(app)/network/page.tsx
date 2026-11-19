@@ -68,7 +68,7 @@ function NetworkCard({ network: n, selected, onSelect, onSaved }: { network: Cli
           )}
         </dl>
         <div className="space-y-3">
-          <div className="rounded-md border border-line bg-panel-2 p-3 text-sm">
+          <div className="rounded-xl border border-line bg-panel-2 p-3 text-sm">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-muted">Live RPC check (from the 4ORGE server)</span>
               <Button size="sm" variant="ghost" icon={<RefreshCw className="size-3.5" />} loading={status.loading} onClick={() => status.reload()}>Check</Button>

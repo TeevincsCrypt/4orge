@@ -132,7 +132,7 @@ function Editor({ bundle, reload }: { bundle: Bundle; reload: () => Promise<void
       {msg && <Callout tone={msg.tone} className="mb-4">{msg.text}</Callout>}
       {!project && <Callout tone="bad" className="mb-4">The project for this Runbook was deleted.</Callout>}
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         <div className="min-w-0">
           <Tabs value={view} onChange={setView} tabs={[{ id: "visual", label: "Steps" }, { id: "json", label: "JSON" }, { id: "yaml", label: "YAML" }]} />
           {view === "visual" && (
@@ -141,7 +141,7 @@ function Editor({ bundle, reload }: { bundle: Bundle; reload: () => Promise<void
                 const spec = STEP_SPECS[step.uses];
                 const err = !validation.ok ? validation.errors.filter((e) => e.path === `steps.${i}` || e.path.startsWith(`steps.${i}.`)) : [];
                 return (
-                  <div key={`${step.id}-${i}`} className={cn("rounded-lg border bg-panel", err.length ? "border-bad/50" : "border-line")}>
+                  <div key={`${step.id}-${i}`} className={cn("rounded-2xl border bg-panel shadow-card", err.length ? "border-bad/40" : "border-line/70")}>
                     <div className="flex flex-wrap items-center gap-3 px-4 py-3">
                       <span className="flex size-6 items-center justify-center rounded-full border border-line-strong text-[11px] text-muted">{i + 1}</span>
                       <div className="min-w-0 flex-1">
@@ -165,11 +165,11 @@ function Editor({ bundle, reload }: { bundle: Bundle; reload: () => Promise<void
                 );
               })}
               {missing.length > 0 && (
-                <div className="rounded-lg border border-dashed border-line-strong p-3">
+                <div className="rounded-2xl border border-dashed border-line-strong p-3">
                   <div className="mb-2 flex items-center gap-1.5 text-xs text-muted"><Plus className="size-3.5" /> Add a step (only allowlisted operations are available)</div>
                   <div className="flex flex-wrap gap-1.5">
                     {missing.map((t: StepType) => (
-                      <button key={t} onClick={() => setDef({ ...def, steps: [...def.steps, makeStep(t, defaultStepId(t))] })} className="rounded-md border border-line-strong bg-panel-2 px-2 py-1 text-xs text-muted hover:border-accent/50 hover:text-text">
+                      <button key={t} onClick={() => setDef({ ...def, steps: [...def.steps, makeStep(t, defaultStepId(t))] })} className="rounded-xl border border-line-strong bg-panel-2 px-2 py-1 text-xs text-muted hover:border-accent/50 hover:text-text">
                         {STEP_SPECS[t].title}
                       </button>
                     ))}
@@ -326,7 +326,7 @@ function StepOptions({ step, onChange }: { step: RunbookStep; onChange: (s: Runb
           </Select>
         </label>
         <label className="flex items-center gap-2">
-          <input type="checkbox" className="accent-[#8b5cf6]" checked={w.required} onChange={(e) => onChange({ ...step, with: { ...w, required: e.target.checked } })} />
+          <input type="checkbox" className="accent-[#5b5fc7]" checked={w.required} onChange={(e) => onChange({ ...step, with: { ...w, required: e.target.checked } })} />
           Required — failing tests block deployment
         </label>
       </div>
@@ -337,7 +337,7 @@ function StepOptions({ step, onChange }: { step: RunbookStep; onChange: (s: Runb
     return (
       <div className={row}>
         <label className="flex items-center gap-2">
-          <input type="checkbox" className="accent-[#8b5cf6]" checked={required} onChange={(e) => onChange({ ...step, with: { required: e.target.checked } })} />
+          <input type="checkbox" className="accent-[#5b5fc7]" checked={required} onChange={(e) => onChange({ ...step, with: { required: e.target.checked } })} />
           Required — fail the execution if verification does not complete
         </label>
       </div>

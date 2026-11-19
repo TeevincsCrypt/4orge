@@ -56,6 +56,23 @@ export const GET = apiRoute(async (_req, { store }) => {
     .sort((a, b) => (a.at < b.at ? 1 : -1))
     .slice(0, 12);
 
+  // Raw event timestamps for the last 8 days; the browser buckets them by local day.
+  const since = Date.now() - 8 * 86_400_000;
+  const [allBuilds, allTests, allExecutions] = await Promise.all([
+    store.list("builds", { columns: ["createdAt"] }),
+    store.list("test_runs", { columns: ["createdAt"] }),
+    store.list("runbook_executions", { columns: ["createdAt"] }),
+  ]);
+  const recent = (rows: { createdAt: string }[], kind: string) =>
+    rows.filter((r) => new Date(r.createdAt).getTime() >= since).map((r) => ({ kind, at: r.createdAt }));
+  const timeline = [
+    ...recent(allBuilds, "build"),
+    ...recent(allTests, "test"),
+    ...recent(allExecutions, "execution"),
+    ...recent(deployments, "deployment"),
+  ];
+  const latestTest = testRuns[0] ?? null;
+
   const active = executions.filter((e) => ["running", "awaiting_confirmation", "awaiting_wallet"].includes(e.status));
   return json({
     stats: {
@@ -71,5 +88,7 @@ export const GET = apiRoute(async (_req, { store }) => {
     recentDeployments: deployments.slice(0, 5).map((d) => ({ ...d, projectName: projectName(d.projectId) })),
     recentProjects: projects.slice(0, 5),
     activity,
+    timeline,
+    latestTest,
   });
 });

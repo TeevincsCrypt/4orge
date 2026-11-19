@@ -146,7 +146,7 @@ export function FilesPanel({ bundle, onChanged }: { bundle: ProjectBundle; onCha
                   }
                 }}
                 spellCheck={false}
-                className="mono block min-h-[32rem] w-full resize-y bg-[#0b0b10] p-4 text-[12.5px] leading-relaxed text-[#d6d6e2] focus:outline-none"
+                className="mono block min-h-[32rem] w-full resize-y rounded-b-2xl bg-panel-2 p-5 text-[12.5px] leading-relaxed text-[#2c2c3e] focus:outline-none"
                 aria-label={`Contents of ${selected}`}
               />
             )}

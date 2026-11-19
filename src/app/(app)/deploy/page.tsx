@@ -87,7 +87,7 @@ function DeployWizard() {
         <EmptyState title="No projects" description="Create a project first." action={<ButtonLink href="/projects/new" variant="primary">New project</ButtonLink>} />
       )}
       {projects.data && projects.data.projects.length > 0 && (
-        <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
           <div className="space-y-4">
             <Card padded={false}>
               <CardHeader title="1 · Project & contract" />
@@ -143,7 +143,7 @@ function DeployWizard() {
                   <button
                     key={n.id}
                     onClick={() => setNetworkId(n.id)}
-                    className={cn("rounded-md border p-3 text-left", n.id === networkId ? "border-accent/60 bg-accent/[0.06]" : "border-line hover:border-line-strong")}
+                    className={cn("rounded-2xl border p-4 text-left transition-colors", n.id === networkId ? "border-accent/50 bg-accent-soft/50 ring-4 ring-accent/10" : "border-line hover:border-line-strong hover:bg-panel-2")}
                   >
                     <div className="flex items-center justify-between text-sm text-text">
                       {n.name}
@@ -162,11 +162,11 @@ function DeployWizard() {
             <CardHeader title="Workflow" />
             <div className="space-y-4 p-5 text-sm">
               <label className="flex items-start gap-2 text-muted">
-                <input type="checkbox" className="mt-1 accent-[#8b5cf6]" checked={runTests && hasTests} disabled={!hasTests} onChange={(e) => setRunTests(e.target.checked)} />
+                <input type="checkbox" className="mt-1 accent-[#5b5fc7]" checked={runTests && hasTests} disabled={!hasTests} onChange={(e) => setRunTests(e.target.checked)} />
                 <span>Run tests first (required to pass){!hasTests && bundle.data && <span className="block text-xs text-warn">No tests in this project — consider generating one.</span>}</span>
               </label>
               <label className="flex items-start gap-2 text-muted">
-                <input type="checkbox" className="mt-1 accent-[#8b5cf6]" checked={confirmStep} onChange={(e) => setConfirmStep(e.target.checked)} />
+                <input type="checkbox" className="mt-1 accent-[#5b5fc7]" checked={confirmStep} onChange={(e) => setConfirmStep(e.target.checked)} />
                 Pause for my review before the wallet prompt
               </label>
               <ol className="space-y-1 border-t border-line pt-3 text-xs text-muted">

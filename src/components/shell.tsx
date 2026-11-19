@@ -1,21 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   AlertTriangle,
+  Bell,
   BookOpen,
-  Boxes,
   ChevronDown,
+  ChevronsUpDown,
   FileCode2,
   FolderGit2,
+  Globe2,
   LayoutDashboard,
   LogOut,
   Menu,
   Network,
+  PanelLeft,
+  Plus,
   Rocket,
-  ScrollText,
+  Search,
   Settings,
   Wallet,
   Workflow,
@@ -23,62 +27,158 @@ import {
 } from "lucide-react";
 import { useApp } from "./app-context";
 import { useWallet } from "./wallet/wallet-provider";
-import { Badge, Button, cn, CopyButton, shorten } from "./ui";
-import { getNetworkByChainId, explorerAddressUrl, getNetwork } from "@/lib/networks";
+import { Avatar, Button, cn, CopyButton, shorten, StatusIcon, timeAgo } from "./ui";
+import { explorerAddressUrl, getNetwork, getNetworkByChainId } from "@/lib/networks";
+import { api } from "@/lib/client/api";
 
-const NAV = [
-  { href: "/", label: "Overview", icon: LayoutDashboard },
-  { href: "/projects", label: "Projects", icon: FolderGit2 },
+type NavItem = { href: string; label: string; icon: typeof LayoutDashboard; add?: { href: string; label: string } };
+
+const NAV_PRIMARY: NavItem[] = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/projects", label: "Projects", icon: FolderGit2, add: { href: "/projects/new", label: "New project" } },
   { href: "/runbooks", label: "Runbooks", icon: Workflow },
   { href: "/deployments", label: "Deployments", icon: Rocket },
+];
+const NAV_SECONDARY: NavItem[] = [
   { href: "/contracts", label: "Contracts", icon: FileCode2 },
   { href: "/network", label: "Network", icon: Network },
   { href: "/docs", label: "Documentation", icon: BookOpen },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-export function Logo({ className }: { className?: string }) {
-  // Unique gradient id per instance: a duplicate id inside a hidden sidebar would blank the visible logo.
+export function Logo({ className, compact }: { className?: string; compact?: boolean }) {
   const gid = `forge-g-${useId().replace(/:/g, "")}`;
   return (
     <span className={cn("flex items-center gap-2.5", className)}>
-      <svg viewBox="0 0 32 32" className="size-7" aria-hidden>
+      <svg viewBox="0 0 32 32" className="size-8 shrink-0" aria-hidden>
         <defs>
           <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#a78bfa" />
-            <stop offset="1" stopColor="#3b82f6" />
+            <stop offset="0" stopColor="#ffffff" />
+            <stop offset="1" stopColor="#d9dafb" />
           </linearGradient>
         </defs>
-        <rect x="1" y="1" width="30" height="30" rx="7" fill="#121219" stroke="#2f2f3b" />
+        <rect x="0" y="0" width="32" height="32" rx="9" fill="#14141b" />
         <path d="M18.5 7 9 18.5h7.5V25h3v-6.5H23v-3h-3.5V7h-1Zm-2 8.5h-3.1l3.1-3.8v3.8Z" fill={`url(#${gid})`} />
       </svg>
-      <span className="text-[15px] font-semibold tracking-[0.18em] text-text">4ORGE</span>
+      {!compact && <span className="text-[19px] font-semibold tracking-tight text-text">4orge</span>}
     </span>
   );
 }
 
-function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+function NavLink({ item, collapsed, onNavigate }: { item: NavItem; collapsed: boolean; onNavigate?: () => void }) {
   const pathname = usePathname();
+  const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+  const Icon = item.icon;
   return (
-    <nav className="flex flex-col gap-0.5">
-      {NAV.map(({ href, label, icon: Icon }) => {
-        const active = href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
-        return (
-          <Link
-            key={href}
-            href={href}
-            onClick={onNavigate}
-            className={cn(
-              "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors",
-              active ? "bg-panel-3 text-text" : "text-muted hover:bg-panel-2 hover:text-text",
-            )}
-          >
-            <Icon className={cn("size-4", active ? "text-accent-strong" : "text-faint")} />
-            {label}
-          </Link>
-        );
-      })}
-    </nav>
+    <div className="group relative flex items-center">
+      <Link
+        href={item.href}
+        onClick={onNavigate}
+        title={collapsed ? item.label : undefined}
+        className={cn(
+          "flex flex-1 items-center gap-3 rounded-full py-2 text-[14px] transition-colors",
+          collapsed ? "justify-center px-0" : "px-3.5",
+          active ? "bg-panel font-medium text-text shadow-[0_1px_3px_rgba(22,22,40,0.08)]" : "text-muted hover:bg-panel/60 hover:text-text",
+        )}
+      >
+        <Icon className={cn("size-[18px] shrink-0", active ? "text-text" : "text-faint group-hover:text-muted")} strokeWidth={active ? 2.1 : 1.8} />
+        {!collapsed && item.label}
+      </Link>
+      {item.add && !collapsed && (
+        <Link
+          href={item.add.href}
+          onClick={onNavigate}
+          aria-label={item.add.label}
+          title={item.add.label}
+          className="absolute right-2 flex size-7 items-center justify-center rounded-full text-faint hover:bg-panel hover:text-text"
+        >
+          <Plus className="size-4" />
+        </Link>
+      )}
+    </div>
+  );
+}
+
+function Sidebar({ collapsed, onToggle, onNavigate, mobile }: { collapsed: boolean; onToggle?: () => void; onNavigate?: () => void; mobile?: boolean }) {
+  return (
+    <div className="flex h-full flex-col">
+      <div className={cn("mb-8 flex items-center", collapsed ? "justify-center" : "justify-between px-2")}>
+        <Link href="/dashboard" onClick={onNavigate} aria-label="4ORGE dashboard">
+          <Logo compact={collapsed} />
+        </Link>
+        {!collapsed && onToggle && (
+          <button onClick={onToggle} aria-label={mobile ? "Close menu" : "Collapse sidebar"} className="flex size-8 items-center justify-center rounded-lg text-faint hover:bg-panel hover:text-text">
+            {mobile ? <X className="size-[18px]" /> : <PanelLeft className="size-[18px]" />}
+          </button>
+        )}
+      </div>
+      <nav className="flex flex-col gap-1">
+        {NAV_PRIMARY.map((i) => <NavLink key={i.href} item={i} collapsed={collapsed} onNavigate={onNavigate} />)}
+      </nav>
+      <div className={cn("my-5 border-t border-line-strong/70", collapsed ? "mx-2" : "mx-3")} />
+      <nav className="flex flex-col gap-1">
+        {NAV_SECONDARY.map((i) => <NavLink key={i.href} item={i} collapsed={collapsed} onNavigate={onNavigate} />)}
+        <Link
+          href="/deploy"
+          onClick={onNavigate}
+          title={collapsed ? "New deployment" : undefined}
+          className={cn("mt-2 flex items-center gap-3 rounded-full py-2 text-[14px] font-medium text-text hover:bg-panel/60", collapsed ? "justify-center" : "px-3.5")}
+        >
+          <Plus className="size-[18px]" />
+          {!collapsed && "New deployment"}
+        </Link>
+      </nav>
+      <div className="mt-auto">
+        {collapsed && onToggle && (
+          <button onClick={onToggle} aria-label="Expand sidebar" className="mx-auto mb-4 flex size-9 items-center justify-center rounded-lg text-faint hover:bg-panel hover:text-text">
+            <PanelLeft className="size-[18px]" />
+          </button>
+        )}
+        <ProfileCard collapsed={collapsed} />
+      </div>
+    </div>
+  );
+}
+
+function ProfileCard({ collapsed }: { collapsed: boolean }) {
+  const { config } = useApp();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useClickOutside(ref, () => setOpen(false));
+  if (!config) return null;
+  const local = config.storageMode === "local";
+  const name = config.user?.label ?? "Guest";
+  return (
+    <div className="relative" ref={ref}>
+      <button onClick={() => setOpen((o) => !o)} className={cn("flex w-full items-center gap-3 rounded-2xl text-left hover:bg-panel/70", collapsed ? "justify-center p-1" : "p-2")} aria-label="Workspace details">
+        <Avatar name={local ? "Local Workspace" : name} size={40} />
+        {!collapsed && (
+          <>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[14px] font-medium text-text">{local ? "Local workspace" : name}</span>
+              <span className="block truncate text-xs text-muted">{local ? "Stored on this machine" : "Supabase · cloud"}</span>
+            </span>
+            <ChevronsUpDown className="size-4 text-faint" />
+          </>
+        )}
+      </button>
+      {open && (
+        <div className="absolute bottom-full left-0 z-50 mb-2 w-72 rounded-2xl border border-line bg-panel p-4 text-[13px] text-muted shadow-pop">
+          {local ? (
+            <>
+              <div className="font-medium text-text">Local mode</div>
+              <p className="mt-1">Data is stored in <span className="mono text-text">.forge-data</span> on this computer and the app only accepts connections from it. Configure Supabase to host 4ORGE for a team.</p>
+            </>
+          ) : (
+            <>
+              <div className="font-medium text-text">Signed in as {name}</div>
+              <p className="mt-1">Projects and deployments are private to your account (Row Level Security).</p>
+            </>
+          )}
+          <Link href="/settings" onClick={() => setOpen(false)} className="mt-3 inline-block font-medium text-accent">Settings →</Link>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -100,19 +200,17 @@ function NetworkSwitcher() {
   const dot = rpcChecking && !rpcStatus ? "bg-faint animate-pulse" : rpcStatus?.ok ? "bg-ok" : rpcStatus ? "bg-bad" : "bg-faint";
   return (
     <div className="relative" ref={ref}>
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="flex h-8 items-center gap-2 rounded-md border border-line-strong bg-panel-2 px-2.5 text-xs text-text hover:border-[#3a3a48]"
-        aria-label="Select network"
-      >
-        <span className={cn("size-2 rounded-full", dot)} title={rpcStatus?.error ?? (rpcStatus?.ok ? "RPC healthy" : "Checking RPC")} />
+      <button onClick={() => setOpen((o) => !o)} className="flex h-10 items-center gap-2 rounded-full px-3 text-[14px] text-text hover:bg-panel" aria-label="Select network">
+        <span className="relative">
+          <Globe2 className="size-[18px] text-muted" />
+          <span className={cn("absolute -right-0.5 -bottom-0.5 size-2 rounded-full ring-2 ring-bg", dot)} title={rpcStatus?.error ?? (rpcStatus?.ok ? "RPC healthy" : "Checking RPC")} />
+        </span>
         <span className="hidden sm:inline">{network.name}</span>
-        <span className="sm:hidden">{network.shortName}</span>
-        {network.kind === "mainnet" && <Badge tone="warn">Mainnet</Badge>}
-        <ChevronDown className="size-3.5 text-faint" />
+        <span className="max-[420px]:hidden sm:hidden">{network.shortName}</span>
+        <ChevronDown className="size-4 text-faint" />
       </button>
       {open && (
-        <div className="absolute right-0 z-40 mt-1.5 w-72 rounded-lg border border-line-strong bg-panel-2 p-1.5 shadow-2xl shadow-black/50">
+        <div className="absolute right-0 z-40 mt-2 w-80 rounded-2xl border border-line bg-panel p-2 shadow-pop">
           {networks.map((n) => (
             <button
               key={n.id}
@@ -120,21 +218,166 @@ function NetworkSwitcher() {
                 setNetworkId(n.id);
                 setOpen(false);
               }}
-              className={cn("flex w-full items-start gap-2.5 rounded-md px-2.5 py-2 text-left hover:bg-panel-3", n.id === network.id && "bg-panel-3")}
+              className={cn("flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-panel-2", n.id === network.id && "bg-panel-2")}
             >
-              <span className={cn("mt-1.5 size-2 rounded-full", n.kind === "mainnet" ? "bg-warn" : n.kind === "testnet" ? "bg-blue" : "bg-faint")} />
+              <span className={cn("mt-1.5 size-2 rounded-full", n.kind === "mainnet" ? "bg-warn" : n.kind === "testnet" ? "bg-accent" : "bg-faint")} />
               <span className="min-w-0 flex-1">
-                <span className="flex items-center gap-2 text-sm text-text">
+                <span className="flex items-center gap-2 text-sm font-medium text-text">
                   {n.name}
-                  <span className="mono text-[11px] text-faint">#{n.chainId}</span>
+                  <span className="mono text-[11px] font-normal text-faint">#{n.chainId}</span>
                 </span>
                 <span className="block text-xs text-muted">{n.deploymentsAllowed ? "Deployments enabled" : "Read-only · deployments locked"}</span>
               </span>
             </button>
           ))}
-          <Link href="/network" onClick={() => setOpen(false)} className="mt-1 block border-t border-line px-2.5 pt-2 pb-1 text-xs text-muted hover:text-text">
+          <Link href="/network" onClick={() => setOpen(false)} className="mt-1 block border-t border-line px-3 pt-2.5 pb-1.5 text-xs font-medium text-accent">
             Network details & custom RPC →
           </Link>
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface Pending {
+  id: string;
+  runbookId: string;
+  runbookName: string;
+  status: string;
+  createdAt: string;
+}
+
+/** Bell: Runbook executions that are waiting on the user (review or wallet signature). */
+function Notifications() {
+  const pathname = usePathname();
+  const [items, setItems] = useState<Pending[]>([]);
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useClickOutside(ref, () => setOpen(false));
+  useEffect(() => {
+    let alive = true;
+    const load = () =>
+      api<{ activeExecutions: Pending[] }>("/overview")
+        .then((o) => alive && setItems(o.activeExecutions))
+        .catch(() => undefined);
+    void load();
+    const t = setInterval(load, 20_000);
+    return () => {
+      alive = false;
+      clearInterval(t);
+    };
+  }, [pathname]);
+  const waiting = items.filter((i) => i.status !== "running");
+  return (
+    <div className="relative" ref={ref}>
+      <button onClick={() => setOpen((o) => !o)} className="flex h-10 items-center gap-1.5 rounded-full px-3 text-[14px] text-muted hover:bg-panel hover:text-text" aria-label={`Notifications (${waiting.length})`}>
+        <Bell className="size-[18px]" />
+        {waiting.length > 0 && <span className="text-text">+{waiting.length}</span>}
+      </button>
+      {open && (
+        <div className="absolute right-0 z-40 mt-2 w-80 rounded-2xl border border-line bg-panel p-2 shadow-pop">
+          <div className="px-3 pt-1.5 pb-2 text-xs font-medium text-muted">Runbooks in progress</div>
+          {items.length === 0 && <p className="px-3 pb-3 text-sm text-muted">Nothing needs your attention.</p>}
+          {items.map((i) => (
+            <Link key={i.id} href={`/runbooks/${i.runbookId}/executions/${i.id}`} onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-panel-2">
+              <StatusIcon status={i.status} />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm text-text">{i.runbookName}</span>
+                <span className="block text-xs text-muted">
+                  {i.status === "awaiting_wallet" ? "Waiting for your wallet signature" : i.status === "awaiting_confirmation" ? "Waiting for your review" : "Running"} · {timeAgo(i.createdAt)}
+                </span>
+              </span>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface SearchHit {
+  kind: "Project" | "Runbook" | "Deployment";
+  title: string;
+  sub: string;
+  href: string;
+}
+
+/** Quick search across projects, Runbooks and deployments (loaded on first focus). */
+function QuickSearch() {
+  const router = useRouter();
+  const [q, setQ] = useState("");
+  const [index, setIndex] = useState<SearchHit[] | null>(null);
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useClickOutside(ref, () => setOpen(false));
+
+  async function load() {
+    if (index) return;
+    try {
+      const [p, r, d] = await Promise.all([
+        api<{ projects: { id: string; name: string; detection: { framework: string } }[] }>("/projects"),
+        api<{ runbooks: { id: string; name: string; projectName: string }[] }>("/runbooks"),
+        api<{ deployments: { id: string; contractName: string; contractAddress: string | null; txHash: string; network: string }[] }>("/deployments"),
+      ]);
+      setIndex([
+        ...p.projects.map((x) => ({ kind: "Project" as const, title: x.name, sub: x.detection.framework, href: `/projects/${x.id}` })),
+        ...r.runbooks.map((x) => ({ kind: "Runbook" as const, title: x.name, sub: x.projectName, href: `/runbooks/${x.id}` })),
+        ...d.deployments.map((x) => ({
+          kind: "Deployment" as const,
+          title: x.contractName,
+          sub: `${x.contractAddress ?? x.txHash} · ${x.network}`,
+          href: `/deployments/${x.id}`,
+        })),
+      ]);
+    } catch {
+      setIndex([]);
+    }
+  }
+
+  const hits = useMemo(() => {
+    const term = q.trim().toLowerCase();
+    if (!term || !index) return [];
+    return index.filter((h) => `${h.title} ${h.sub}`.toLowerCase().includes(term)).slice(0, 8);
+  }, [q, index]);
+
+  return (
+    <div className="relative hidden w-full max-w-xs md:block" ref={ref}>
+      <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-faint" />
+      <input
+        value={q}
+        onFocus={() => {
+          setOpen(true);
+          void load();
+        }}
+        onChange={(e) => {
+          setQ(e.target.value);
+          setOpen(true);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && hits[0]) {
+            router.push(hits[0].href);
+            setOpen(false);
+            setQ("");
+          }
+          if (e.key === "Escape") setOpen(false);
+        }}
+        placeholder="Search…"
+        aria-label="Search projects, Runbooks and deployments"
+        className="h-10 w-full rounded-full bg-transparent pr-3 pl-9 text-[14px] text-text placeholder:text-faint hover:bg-panel/60 focus:bg-panel focus:outline-none focus:ring-4 focus:ring-accent/10"
+      />
+      {open && q.trim() && (
+        <div className="absolute left-0 z-40 mt-2 w-96 max-w-[90vw] rounded-2xl border border-line bg-panel p-2 shadow-pop">
+          {index === null && <p className="px-3 py-2 text-sm text-muted">Loading…</p>}
+          {index && hits.length === 0 && <p className="px-3 py-2 text-sm text-muted">No matches for “{q}”.</p>}
+          {hits.map((h) => (
+            <Link key={h.href} href={h.href} onClick={() => { setOpen(false); setQ(""); }} className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-panel-2">
+              <span className="w-[74px] shrink-0 text-[11px] font-medium text-faint">{h.kind}</span>
+              <span className="min-w-0">
+                <span className="block truncate text-sm text-text">{h.title}</span>
+                <span className="mono block truncate text-[11px] text-muted">{h.sub}</span>
+              </span>
+            </Link>
+          ))}
         </div>
       )}
     </div>
@@ -154,17 +397,17 @@ export function WalletButton() {
   if (!w.address) {
     return (
       <div className="relative" ref={ref}>
-        <Button variant="primary" size="sm" className="h-8" icon={<Wallet className="size-3.5" />} loading={w.connecting} onClick={() => setOpen((o) => !o)}>
-          Connect wallet
+        <Button variant="primary" className="h-10 max-sm:w-10 max-sm:px-0" icon={<Wallet className="size-4" />} loading={w.connecting} onClick={() => setOpen((o) => !o)} aria-label="Connect wallet">
+          <span className="max-sm:hidden">Connect wallet</span>
         </Button>
         {open && (
-          <div className="absolute right-0 z-40 mt-1.5 w-72 rounded-lg border border-line-strong bg-panel-2 p-2 shadow-2xl shadow-black/50">
-            <p className="px-1.5 pb-2 text-xs text-muted">Choose a browser wallet. 4ORGE never asks for your seed phrase or private key.</p>
+          <div className="absolute right-0 z-40 mt-2 w-80 rounded-2xl border border-line bg-panel p-3 shadow-pop">
+            <p className="px-1 pb-3 text-[13px] text-muted">Choose a browser wallet. 4ORGE never asks for your seed phrase or private key.</p>
             {w.wallets.length === 0 && (
-              <div className="rounded-md border border-dashed border-line-strong p-3 text-xs text-muted">
+              <div className="rounded-xl bg-panel-2 p-3 text-[13px] text-muted">
                 No wallet detected. Install{" "}
-                <a className="text-blue-strong underline" href="https://metamask.io/download/" target="_blank" rel="noreferrer">MetaMask</a> or{" "}
-                <a className="text-blue-strong underline" href="https://rabby.io/" target="_blank" rel="noreferrer">Rabby</a> and reload.
+                <a className="font-medium text-accent underline" href="https://metamask.io/download/" target="_blank" rel="noreferrer">MetaMask</a> or{" "}
+                <a className="font-medium text-accent underline" href="https://rabby.io/" target="_blank" rel="noreferrer">Rabby</a> and reload.
               </div>
             )}
             {w.wallets.map((info) => (
@@ -174,22 +417,22 @@ export function WalletButton() {
                   setOpen(false);
                   await w.connect(info.rdns || info.uuid);
                 }}
-                className="flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-sm text-text hover:bg-panel-3"
+                className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-sm font-medium text-text hover:bg-panel-2"
               >
                 {info.icon ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={info.icon} alt="" className="size-5 rounded" />
+                  <img src={info.icon} alt="" className="size-6 rounded-md" />
                 ) : (
-                  <Wallet className="size-5 text-faint" />
+                  <span className="flex size-6 items-center justify-center rounded-md bg-panel-3"><Wallet className="size-3.5 text-muted" /></span>
                 )}
                 {info.name}
               </button>
             ))}
-            {w.error && <p className="mt-2 rounded-md bg-bad/10 px-2 py-1.5 text-xs text-bad">{w.error}</p>}
+            {w.error && <p className="mt-2 rounded-xl bg-bad/8 px-3 py-2 text-xs text-bad">{w.error}</p>}
           </div>
         )}
         {!open && w.error && (
-          <div className="absolute right-0 z-40 mt-1.5 w-72 rounded-md border border-bad/30 bg-panel-2 p-2.5 text-xs text-bad shadow-xl">
+          <div className="absolute right-0 z-40 mt-2 w-80 rounded-2xl border border-bad/20 bg-panel p-3 text-xs text-bad shadow-pop">
             {w.error}
             <button className="ml-2 underline" onClick={w.clearError}>Dismiss</button>
           </div>
@@ -203,27 +446,32 @@ export function WalletButton() {
       <button
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          "flex h-8 items-center gap-2 rounded-md border px-2.5 text-xs",
-          mismatch ? "border-warn/40 bg-warn/10 text-warn" : "border-line-strong bg-panel-2 text-text hover:border-[#3a3a48]",
+          "flex h-10 items-center gap-2 rounded-full px-4 text-[13px] font-medium",
+          mismatch ? "bg-warn/12 text-warn ring-1 ring-warn/30" : "bg-ink text-white hover:bg-[#2a2a35]",
         )}
       >
-        {mismatch ? <AlertTriangle className="size-3.5" /> : <span className="size-2 rounded-full bg-ok" />}
-        <span className="mono">{shorten(w.address, 6, 4)}</span>
-        <ChevronDown className="size-3.5 opacity-60" />
+        {mismatch ? <AlertTriangle className="size-4" /> : <span className="size-2 rounded-full bg-[#7ee2b0]" />}
+        <span className="mono max-sm:hidden">{shorten(w.address, 6, 4)}</span>
+        <ChevronDown className="size-4 opacity-60" />
       </button>
       {open && (
-        <div className="absolute right-0 z-40 mt-1.5 w-80 rounded-lg border border-line-strong bg-panel-2 p-3 shadow-2xl shadow-black/50">
-          <div className="text-xs text-muted">Connected with {w.active?.name ?? "wallet"}</div>
-          <div className="mt-1 flex items-center gap-1">
-            <span className="mono truncate text-sm text-text">{w.address}</span>
-            <CopyButton value={w.address} />
+        <div className="absolute right-0 z-40 mt-2 w-80 rounded-2xl border border-line bg-panel p-4 shadow-pop">
+          <div className="flex items-center gap-3">
+            <Avatar name={w.address.slice(2, 6)} size={36} />
+            <div className="min-w-0">
+              <div className="text-xs text-muted">Connected with {w.active?.name ?? "wallet"}</div>
+              <div className="flex items-center gap-1">
+                <span className="mono truncate text-[13px] text-text">{shorten(w.address, 10, 8)}</span>
+                <CopyButton value={w.address} />
+              </div>
+            </div>
           </div>
-          <div className="mt-3 rounded-md border border-line bg-panel px-2.5 py-2 text-xs">
+          <div className="mt-4 space-y-1.5 rounded-xl bg-panel-2 px-3 py-2.5 text-xs">
             <div className="flex justify-between text-muted">
               <span>Wallet network</span>
               <span className="text-text">{walletNet ? walletNet.name : `Chain ${w.chainId}`}</span>
             </div>
-            <div className="mt-1 flex justify-between text-muted">
+            <div className="flex justify-between text-muted">
               <span>4ORGE network</span>
               <span className="text-text">{network.name}</span>
             </div>
@@ -253,7 +501,7 @@ export function WalletButton() {
           )}
           <div className="mt-3 flex gap-2">
             {network.explorerUrl && (
-              <a href={explorerAddressUrl(getNetwork(network.id), w.address) ?? "#"} target="_blank" rel="noreferrer" className="flex-1 rounded-md border border-line-strong px-2 py-1.5 text-center text-xs text-muted hover:text-text">
+              <a href={explorerAddressUrl(getNetwork(network.id), w.address) ?? "#"} target="_blank" rel="noreferrer" className="flex h-8 flex-1 items-center justify-center rounded-full border border-line-strong text-xs text-muted hover:text-text">
                 View in explorer
               </a>
             )}
@@ -262,7 +510,7 @@ export function WalletButton() {
                 await w.disconnect();
                 setOpen(false);
               }}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-line-strong px-2 py-1.5 text-xs text-muted hover:text-text"
+              className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-full border border-line-strong text-xs text-muted hover:text-text"
             >
               <LogOut className="size-3.5" />
               Disconnect
@@ -274,86 +522,66 @@ export function WalletButton() {
   );
 }
 
+const COLLAPSE_KEY = "4orge.sidebar-collapsed";
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { config } = useApp();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    try {
+      // Restore the remembered sidebar state after hydration.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCollapsed(localStorage.getItem(COLLAPSE_KEY) === "1");
+    } catch {
+      /* storage unavailable */
+    }
+  }, []);
+  const toggle = () =>
+    setCollapsed((c) => {
+      try {
+        localStorage.setItem(COLLAPSE_KEY, c ? "0" : "1");
+      } catch {
+        /* ignore */
+      }
+      return !c;
+    });
+
   return (
-    <div className="flex min-h-dvh">
-      <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-line bg-panel px-3 py-4 lg:flex">
-        <Link href="/" className="mb-6 px-1.5">
-          <Logo />
-        </Link>
-        <NavLinks />
-        <div className="mt-auto space-y-3 px-1.5">
-          <Link href="/deploy" className="flex items-center justify-center gap-2 rounded-md border border-accent/40 bg-accent/10 px-3 py-2 text-sm font-medium text-accent-strong hover:bg-accent/15">
-            <Rocket className="size-4" />
-            Start deployment
-          </Link>
-          <ModeIndicator />
-        </div>
+    <div className="flex min-h-dvh bg-bg">
+      <aside className={cn("sticky top-0 hidden h-dvh shrink-0 border-r border-line-strong/60 bg-sidebar py-6 transition-[width] lg:block", collapsed ? "w-[84px] px-3" : "w-[272px] px-4")}>
+        <Sidebar collapsed={collapsed} onToggle={toggle} />
       </aside>
 
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute inset-y-0 left-0 flex w-64 flex-col border-r border-line bg-panel px-3 py-4">
-            <div className="mb-6 flex items-center justify-between px-1.5">
-              <Logo />
-              <button onClick={() => setMobileOpen(false)} aria-label="Close menu" className="text-muted">
-                <X className="size-5" />
-              </button>
-            </div>
-            <NavLinks onNavigate={() => setMobileOpen(false)} />
-            <div className="mt-auto space-y-3 px-1.5">
-              <Link href="/deploy" onClick={() => setMobileOpen(false)} className="flex items-center justify-center gap-2 rounded-md border border-accent/40 bg-accent/10 px-3 py-2 text-sm font-medium text-accent-strong">
-                <Rocket className="size-4" />
-                Start deployment
-              </Link>
-              <ModeIndicator />
-            </div>
+          <div className="absolute inset-0 bg-[#16161d]/30 backdrop-blur-[2px]" onClick={() => setMobileOpen(false)} />
+          <aside className="absolute inset-y-0 left-0 w-[280px] bg-sidebar px-4 py-6 shadow-pop">
+            <Sidebar collapsed={false} onToggle={() => setMobileOpen(false)} onNavigate={() => setMobileOpen(false)} mobile />
           </aside>
         </div>
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-line bg-bg/85 px-4 backdrop-blur sm:px-6">
-          <button className="text-muted lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Open menu">
-            <Menu className="size-5" />
-          </button>
-          <Link href="/" className="lg:hidden">
-            <Logo className="[&>span:last-child]:hidden sm:[&>span:last-child]:inline" />
-          </Link>
-          <div className="ml-auto flex items-center gap-2">
-            {config?.user && <NetworkSwitcher />}
-            {config?.user && <WalletButton />}
+        <header className="sticky top-0 z-30 bg-bg/85 backdrop-blur">
+          <div className="mx-auto flex h-[72px] w-full max-w-[1280px] items-center gap-2 px-4 sm:px-8">
+            <button className="flex size-10 items-center justify-center rounded-full text-muted hover:bg-panel lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+              <Menu className="size-5" />
+            </button>
+            <Link href="/dashboard" className="lg:hidden" aria-label="4ORGE dashboard">
+              <Logo compact />
+            </Link>
+            {config?.user && <QuickSearch />}
+            <div className="ml-auto flex items-center gap-1 sm:gap-2">
+              {config?.user && <Notifications />}
+              {config?.user && <NetworkSwitcher />}
+              {config?.user && <WalletButton />}
+            </div>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 sm:py-8">{children}</main>
+        <main className="mx-auto w-full max-w-[1280px] flex-1 px-4 pt-4 pb-12 sm:px-8">{children}</main>
       </div>
-    </div>
-  );
-}
-
-function ModeIndicator() {
-  const { config } = useApp();
-  if (!config) return null;
-  return (
-    <div className="rounded-md border border-line bg-panel-2 px-2.5 py-2 text-[11px] leading-snug text-faint">
-      {config.storageMode === "local" ? (
-        <>
-          <div className="flex items-center gap-1.5 font-medium text-muted">
-            <ScrollText className="size-3" /> Local mode
-          </div>
-          Data is stored on this machine (.forge-data). Supabase is not configured.
-        </>
-      ) : (
-        <>
-          <div className="flex items-center gap-1.5 font-medium text-muted">
-            <Boxes className="size-3" /> Supabase
-          </div>
-          {config.user ? `Signed in as ${config.user.label}` : "Not signed in"}
-        </>
-      )}
     </div>
   );
 }

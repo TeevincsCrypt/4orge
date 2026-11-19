@@ -19,13 +19,13 @@ export default function LoginPage() {
     return (
       <Shell>
         <Callout tone="blue" title="Local mode — no sign-in needed">
-          Supabase is not configured, so 4ORGE runs as a single-user local workspace. <Link href="/">Open the dashboard</Link>.
+          Supabase is not configured, so 4ORGE runs as a single-user local workspace. <Link href="/dashboard">Open the dashboard</Link>.
         </Callout>
       </Shell>
     );
   }
   const supabase = createBrowserClient(url, key);
-  const next = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("next") ?? "/" : "/";
+  const next = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("next") ?? "/dashboard" : "/dashboard";
   const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` : undefined;
 
   return (

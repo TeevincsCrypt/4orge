@@ -240,13 +240,16 @@ async function main() {
   log("forged transaction hash correctly rejected:", receiptStep.error);
 
   // 12. Visit main pages for runtime errors
-  for (const p of ["/", "/projects", "/runbooks", "/deployments", "/contracts", "/network", "/settings", "/docs", "/docs/runbooks"]) {
+  for (const p of ["/", "/dashboard", "/projects", "/runbooks", "/deployments", "/contracts", "/network", "/settings", "/docs", "/docs/runbooks"]) {
     await page.goto(`${base}${p}`);
     await page.waitForTimeout(1200);
   }
+  await page.goto(`${base}/dashboard`);
+  await page.waitForTimeout(2500);
+  await page.screenshot({ path: path.join(SHOTS, "dashboard.png") });
   await page.goto(`${base}/`);
   await page.waitForTimeout(2000);
-  await page.screenshot({ path: path.join(SHOTS, "overview.png") });
+  await page.screenshot({ path: path.join(SHOTS, "landing.png") });
   if (errors.length) throw new Error(`Page errors:\n${errors.join("\n")}`);
 
   await browser.close();

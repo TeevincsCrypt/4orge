@@ -37,7 +37,7 @@ export function ProjectRunbooks({ bundle }: { bundle: ProjectBundle; onChanged: 
           action={
             <>
               <Button onClick={create} loading={busy} icon={<Plus className="size-4" />}>Checks-only Runbook</Button>
-              <Link href={`/deploy?projectId=${bundle.project.id}`} className="inline-flex h-9 items-center rounded-md bg-accent px-3.5 text-sm font-medium text-white">Deployment Runbook</Link>
+              <Link href={`/deploy?projectId=${bundle.project.id}`} className="inline-flex h-10 items-center rounded-full bg-ink px-4 text-sm font-medium text-white hover:bg-[#2a2a35]">Deployment Runbook</Link>
             </>
           }
         />

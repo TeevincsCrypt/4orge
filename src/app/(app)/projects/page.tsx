@@ -32,10 +32,10 @@ export default function ProjectsPage() {
           {data.projects.map((p) => {
             const contracts = p.detection.contracts.filter((c) => c.kind === "contract");
             return (
-              <Link key={p.id} href={`/projects/${p.id}`} className="group rounded-lg border border-line bg-panel p-4 transition-colors hover:border-line-strong hover:bg-panel-2">
+              <Link key={p.id} href={`/projects/${p.id}`} className="group rounded-2xl border border-line/70 bg-panel p-5 shadow-card transition-colors hover:border-line-strong hover:bg-panel-2">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <h3 className="truncate text-sm font-semibold text-text group-hover:text-white">{p.name}</h3>
+                    <h3 className="truncate text-sm font-semibold text-text group-hover:text-accent">{p.name}</h3>
                     <p className="mt-0.5 line-clamp-2 min-h-[2.5em] text-xs text-muted">{p.description || "No description"}</p>
                   </div>
                   {p.source === "github" ? <Badge tone="neutral"><GitBranch className="size-3" />GitHub</Badge> : <Badge>{p.source}</Badge>}

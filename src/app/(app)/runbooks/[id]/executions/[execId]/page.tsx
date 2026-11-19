@@ -109,7 +109,7 @@ export default function ExecutionPage() {
       />
       {actionError && <Callout tone="bad" className="mb-4">{actionError}</Callout>}
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_400px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_400px]">
         <div className="min-w-0 space-y-4">
           {needsWalletForPrepare && (
             <Callout tone="blue" title="Connect the deployer wallet to continue">
@@ -170,7 +170,7 @@ function StepRow({ index, state, isNext, canRetry, onRetry, network }: { index: 
   const tx = out?.txHash as string | undefined;
   const addr = out?.contractAddress as string | undefined;
   return (
-    <li className={cn("px-5 py-3.5", isNext && state.status !== "failed" && "bg-blue/[0.03]")}>
+    <li className={cn("px-5 py-3.5", isNext && state.status !== "failed" && "bg-accent-soft/40")}>
       <div className="flex items-start gap-3">
         <div className="pt-0.5"><StatusIcon status={state.status} /></div>
         <div className="min-w-0 flex-1">
@@ -180,8 +180,8 @@ function StepRow({ index, state, isNext, canRetry, onRetry, network }: { index: 
             <Badge tone={spec.category === "wallet" ? "accent" : spec.category === "human" ? "warn" : spec.category === "build" ? "blue" : "neutral"}>{CATEGORY_LABEL[spec.category]}</Badge>
             {state.attempts > 1 && <span className="text-[11px] text-faint">attempt {state.attempts}</span>}
           </div>
-          {state.summary && <p className="mt-1 text-sm text-muted">{state.summary}</p>}
-          {state.error && <p className="mt-1 whitespace-pre-wrap text-sm text-bad">{state.error}</p>}
+          {state.summary && <p className="mt-1 text-sm text-muted [overflow-wrap:anywhere]">{state.summary}</p>}
+          {state.error && <p className="mt-1 whitespace-pre-wrap text-sm text-bad [overflow-wrap:anywhere]">{state.error}</p>}
           {tx && <div className="mt-1 flex items-center gap-1 text-xs text-muted">tx <HexValue value={tx} href={explorerTxUrl(network, tx)} /></div>}
           {addr && <div className="mt-1 flex items-center gap-1 text-xs text-muted">address <HexValue value={addr} href={explorerAddressUrl(network, addr)} /></div>}
           {Array.isArray(out?.checks) && (
@@ -218,7 +218,7 @@ function DeploymentSummary({ execution }: { execution: RunbookExecution }) {
     ["Creation data", <span key="x" className="text-xs text-muted">{((p.data.length - 2) / 2).toLocaleString()} bytes</span>],
   ];
   return (
-    <dl className="divide-y divide-line rounded-md border border-line text-sm">
+    <dl className="divide-y divide-line rounded-xl border border-line text-sm">
       {rows.map(([k, v]) => (
         <div key={k} className="flex flex-col gap-1 px-3 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           <dt className="shrink-0 text-xs text-muted">{k}</dt>
@@ -323,23 +323,22 @@ function WalletPanel({ execution, step, onResult }: { execution: RunbookExecutio
 }
 
 function LogView({ logs, steps }: { logs: ExecutionLog[]; steps: StepState[] }) {
-  const end = useRef<HTMLDivElement>(null);
+  const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    // Block body: in recent browsers scrollIntoView() returns a Promise, which must not be returned from an effect.
-    end.current?.scrollIntoView({ block: "nearest" });
+    // Scroll only the log panel (scrollIntoView would also scroll the page).
+    if (box.current) box.current.scrollTop = box.current.scrollHeight;
   }, [logs.length]);
   const idx = new Map(steps.map((s, i) => [s.stepId, i + 1]));
   return (
-    <div className="mono max-h-[36rem] overflow-y-auto bg-[#0b0b10] p-3 text-[11.5px] leading-relaxed">
+    <div ref={box} className="mono max-h-[36rem] overflow-y-auto rounded-b-2xl bg-panel-2 p-4 text-[11.5px] leading-relaxed">
       {logs.map((l) => (
-        <div key={l.id} className={cn("flex gap-2", l.level === "error" ? "text-[#f6a7a7]" : l.level === "warn" ? "text-[#f3d08a]" : "text-[#c2c2d0]")}>
+        <div key={l.id} className={cn("flex gap-2", l.level === "error" ? "text-bad" : l.level === "warn" ? "text-warn" : "text-[#3b3b50]")}>
           <span className="shrink-0 text-faint">{new Date(l.createdAt).toLocaleTimeString()}</span>
           {l.stepId && <span className="shrink-0 text-accent-strong">[{idx.get(l.stepId) ?? "·"}]</span>}
-          <span className="whitespace-pre-wrap break-words">{l.message}</span>
+          <span className="min-w-0 whitespace-pre-wrap [overflow-wrap:anywhere]">{l.message}</span>
         </div>
       ))}
       {logs.length === 0 && <span className="text-faint">No log entries yet.</span>}
-      <div ref={end} />
     </div>
   );
 }

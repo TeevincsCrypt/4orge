@@ -13,7 +13,7 @@ npm install
 npm run dev
 ```
 
-Open **http://localhost:3000** in your browser. The sidebar shows **Local mode**: your data is stored in the `.forge-data` folder on this computer.
+Open **http://localhost:3000** in your browser and click **Open workspace**. The profile card at the bottom of the sidebar says **Local workspace**: your data is stored in the `.forge-data` folder on this computer.
 
 ## 2. Prepare a wallet
 
@@ -40,7 +40,7 @@ Open **http://localhost:3000** in your browser. The sidebar shows **Local mode**
 
 ## 5. Deploy
 
-Click **Deploy** (or **Start deployment** in the sidebar):
+Click **Deploy** on the project (or **New deployment** in the sidebar):
 
 1. Choose the contract and fill in the constructor arguments. They are checked against the contract's ABI as you type.
 2. Keep **QIE Testnet** selected.

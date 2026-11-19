@@ -55,8 +55,13 @@ export function stripSolidityComments(src: string): string {
   return out;
 }
 
+/** Replace the contents of string literals with spaces (keeps offsets stable). */
+function blankStrings(src: string): string {
+  return src.replace(/"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'/g, (m) => m[0] + " ".repeat(m.length - 2) + m[0]);
+}
+
 export function parseDeclarations(path: string, source: string): DetectedContract[] {
-  const clean = stripSolidityComments(source);
+  const clean = blankStrings(stripSolidityComments(source));
   const re = /\b(abstract\s+contract|contract|interface|library)\s+([A-Za-z_$][A-Za-z0-9_$]*)/g;
   const found: DetectedContract[] = [];
   let m: RegExpExecArray | null;

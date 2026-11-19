@@ -27,7 +27,7 @@
  */
 import type { TestCaseResult } from "../types";
 
-// eslint-disable-next-line no-control-regex
+ 
 const ANSI = /\u001b\[[0-9;]*[A-Za-z]/g;
 
 export interface ParsedTestOutput {

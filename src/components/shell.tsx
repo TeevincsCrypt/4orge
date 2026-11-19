@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import {
   AlertTriangle,
   BookOpen,
@@ -38,17 +38,19 @@ const NAV = [
 ];
 
 export function Logo({ className }: { className?: string }) {
+  // Unique gradient id per instance: a duplicate id inside a hidden sidebar would blank the visible logo.
+  const gid = `forge-g-${useId().replace(/:/g, "")}`;
   return (
     <span className={cn("flex items-center gap-2.5", className)}>
       <svg viewBox="0 0 32 32" className="size-7" aria-hidden>
         <defs>
-          <linearGradient id="forge-g" x1="0" y1="0" x2="1" y2="1">
+          <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stopColor="#a78bfa" />
             <stop offset="1" stopColor="#3b82f6" />
           </linearGradient>
         </defs>
         <rect x="1" y="1" width="30" height="30" rx="7" fill="#121219" stroke="#2f2f3b" />
-        <path d="M18.5 7 9 18.5h7.5V25h3v-6.5H23v-3h-3.5V7h-1Zm-2 8.5h-3.1l3.1-3.8v3.8Z" fill="url(#forge-g)" />
+        <path d="M18.5 7 9 18.5h7.5V25h3v-6.5H23v-3h-3.5V7h-1Zm-2 8.5h-3.1l3.1-3.8v3.8Z" fill={`url(#${gid})`} />
       </svg>
       <span className="text-[15px] font-semibold tracking-[0.18em] text-text">4ORGE</span>
     </span>

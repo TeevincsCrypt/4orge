@@ -55,9 +55,9 @@ export function getConfig(): ServerConfig {
     storageMode,
     supabaseUrl,
     supabaseAnonKey,
-    dataDir: path.resolve(root, process.env.FORGE_DATA_DIR || ".forge-data"),
-    cacheDir: path.resolve(root, process.env.FORGE_CACHE_DIR || ".forge-cache"),
-    runnerDir: path.resolve(root, "runner"),
+    dataDir: path.resolve(/* turbopackIgnore: true */ root, process.env.FORGE_DATA_DIR || ".forge-data"),
+    cacheDir: path.resolve(/* turbopackIgnore: true */ root, process.env.FORGE_CACHE_DIR || ".forge-cache"),
+    runnerDir: path.resolve(/* turbopackIgnore: true */ root, "runner"),
     networkFlags: {
       // Mainnet deployments stay locked unless the operator deliberately opts in.
       mainnetDeploymentsEnabled: flag("FORGE_ENABLE_MAINNET_DEPLOYMENTS", false),

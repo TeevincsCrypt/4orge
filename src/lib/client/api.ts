@@ -49,7 +49,9 @@ export function useApi<T>(path: string | null, opts: { pollMs?: number } = {}): 
   const [error, setError] = useState<ApiError | Error | null>(null);
   const [loading, setLoading] = useState<boolean>(Boolean(path));
   const current = useRef(path);
-  current.current = path;
+  useEffect(() => {
+    current.current = path;
+  }, [path]);
 
   const load = useCallback(async () => {
     if (!path) return;

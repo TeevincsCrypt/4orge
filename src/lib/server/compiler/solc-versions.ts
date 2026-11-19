@@ -31,7 +31,7 @@ let bundled: { version: string; path: string } | null = null;
 export function bundledCompiler(): { version: string; path: string } {
   if (!bundled) {
     // Resolved from the project root at runtime (not via the bundler).
-    const dir = path.join(process.cwd(), "node_modules", "solc");
+    const dir = path.join(/* turbopackIgnore: true */ process.cwd(), "node_modules", "solc");
     const pkg = JSON.parse(readFileSync(path.join(dir, "package.json"), "utf8")) as { version: string };
     bundled = { version: pkg.version, path: path.join(dir, "soljson.js") };
   }

@@ -45,7 +45,7 @@ export type PathCheck = { ok: true; path: string } | { ok: false; reason: string
 export function normalizeProjectPath(input: string): PathCheck {
   if (typeof input !== "string" || input.length === 0) return { ok: false, reason: "Empty path." };
   if (input.length > 400) return { ok: false, reason: "Path is too long." };
-  // eslint-disable-next-line no-control-regex
+   
   if (/[\u0000-\u001f]/.test(input)) return { ok: false, reason: "Path contains control characters." };
   const unified = input.replace(/\\/g, "/");
   if (unified.startsWith("/") || /^[a-zA-Z]:/.test(unified)) {

@@ -182,7 +182,7 @@ export async function compileProject(
   const inputJson = JSON.stringify(input);
   const inputHash = createHash("sha256").update(inputJson).digest("hex");
 
-  const result = await runNode([path.join(process.cwd(), "scripts", "solc-worker.cjs")], {
+  const result = await runNode([path.join(/* turbopackIgnore: true */ process.cwd(), "scripts", "solc-worker.cjs")], {
     cwd: process.cwd(),
     timeoutMs: 180_000,
     memoryMb: 3072,

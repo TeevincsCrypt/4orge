@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { FileCode2, GitBranch, Hammer, Rocket, TestTube2, Workflow } from "lucide-react";
@@ -58,7 +59,7 @@ function ProjectWorkspace() {
   return (
     <>
       <PageHeader
-        eyebrow={<a href="/projects" className="hover:text-text">Projects</a>}
+        eyebrow={<Link href="/projects" className="hover:text-text">Projects</Link>}
         title={p.name}
         description={p.description || undefined}
         actions={

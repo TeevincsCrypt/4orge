@@ -30,7 +30,34 @@ export interface SpawnLimits {
  * This is process-level isolation. For multi-tenant hosting, run the 4ORGE
  * worker inside a container/VM sandbox as described in docs/architecture.md.
  */
-export function runNode(args: string[], limits: SpawnLimits): Promise<SpawnResult> {
+// Server-wide cap on concurrent compiler/test processes (FORGE_MAX_JOBS, default 2)
+// so a burst of requests cannot exhaust CPU or memory.
+const MAX_JOBS = Math.max(1, Number(process.env.FORGE_MAX_JOBS) || 2);
+let running = 0;
+const queue: (() => void)[] = [];
+async function acquire() {
+  if (running < MAX_JOBS) {
+    running++;
+    return;
+  }
+  await new Promise<void>((resolve) => queue.push(resolve));
+  running++;
+}
+function release() {
+  running--;
+  queue.shift()?.();
+}
+
+export async function runNode(args: string[], limits: SpawnLimits): Promise<SpawnResult> {
+  await acquire();
+  try {
+    return await spawnNode(args, limits);
+  } finally {
+    release();
+  }
+}
+
+function spawnNode(args: string[], limits: SpawnLimits): Promise<SpawnResult> {
   const maxOut = limits.maxOutputBytes ?? 2 * 1024 * 1024;
   const env: Record<string, string> = {
     PATH: process.env.PATH ?? "/usr/bin:/bin",

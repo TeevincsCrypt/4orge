@@ -16,7 +16,7 @@ export async function readDoc(slug: string): Promise<string | null> {
   const doc = DOCS.find((d) => d.slug === slug);
   if (!doc) return null;
   try {
-    return await fs.readFile(path.join(process.cwd(), doc.file), "utf8");
+    return await fs.readFile(path.join(/* turbopackIgnore: true */ process.cwd(), doc.file), "utf8");
   } catch {
     return null;
   }

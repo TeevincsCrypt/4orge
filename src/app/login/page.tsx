@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { GitBranch, Mail } from "lucide-react";
@@ -18,7 +19,7 @@ export default function LoginPage() {
     return (
       <Shell>
         <Callout tone="blue" title="Local mode — no sign-in needed">
-          Supabase is not configured, so 4ORGE runs as a single-user local workspace. <a href="/">Open the dashboard</a>.
+          Supabase is not configured, so 4ORGE runs as a single-user local workspace. <Link href="/">Open the dashboard</Link>.
         </Callout>
       </Shell>
     );

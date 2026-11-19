@@ -64,7 +64,7 @@ export default function ExecutionPage() {
   useEffect(() => {
     if (!execution || execution.status !== "running" || drivingRef.current || needsWalletForPrepare) return;
     drivingRef.current = true;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setDriving(true);
     const poll = setInterval(() => void refresh().catch(() => undefined), 2000);
     void api<{ execution: RunbookExecution }>(`/executions/${execution.id}/advance`, { body: { deployer: wallet.address ?? null } })

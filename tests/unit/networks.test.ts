@@ -28,3 +28,16 @@ describe("QIE networks", () => {
     expect(validateRpcUrl("javascript:alert(1)").ok).toBe(false);
   });
 });
+
+describe("environment flags", async () => {
+  const { parseFlag } = await import("@/lib/server/config");
+  it("accepts common spellings, quotes and spaces", () => {
+    for (const v of ["true", "TRUE", " true ", '"true"', "'true'", "1", "yes", "on"]) expect(parseFlag(v)).toBe(true);
+    for (const v of ["false", "0", "no", "off", '"false"']) expect(parseFlag(v)).toBe(false);
+  });
+  it("distinguishes unset from unrecognised", () => {
+    expect(parseFlag(undefined)).toBeNull();
+    expect(parseFlag("  ")).toBeNull();
+    expect(parseFlag("enabled")).toBe("invalid");
+  });
+});

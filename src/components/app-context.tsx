@@ -11,6 +11,8 @@ export interface AppConfig {
   githubConfigured: boolean;
   user: { id: string; label: string } | null;
   authError: string | null;
+  authMessage?: string | null;
+  remoteAccess?: boolean;
 }
 
 export type ClientNetwork = ForgeNetwork & { deploymentsAllowed: boolean; rpcOverride: string | null };

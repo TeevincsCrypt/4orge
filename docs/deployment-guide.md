@@ -7,6 +7,26 @@ How to run 4ORGE somewhere other than your own laptop.
 - **A Node.js 22.12+ server process** (a VPS, Railway, Render, Fly.io or a container). 4ORGE starts child processes for the compiler and Hardhat and writes a cache to disk, so purely serverless platforms with read-only filesystems and short time limits are not a good fit for the build and test features.
 - Outbound HTTPS to `registry.npmjs.org` (compilers and Solidity packages), `binaries.soliditylang.org` (fallback), the QIE RPC and explorer hosts, and `api.github.com` / `github.com` for imports.
 
+## Quick test deployment on Railway (no sign-in)
+
+For a private test, you can host 4ORGE in local mode without Supabase:
+
+1. railway.app → **New Project → Deploy from GitHub repo** → select the repository and the branch you want to deploy.
+2. Add a **Volume** mounted at `/data`.
+3. **Variables:**
+   ```
+   FORGE_ALLOW_REMOTE_LOCAL_MODE=true
+   FORGE_DATA_DIR=/data/forge-data
+   FORGE_CACHE_DIR=/data/forge-cache
+   FORGE_TEST_RUNNER=solidity
+   FORGE_ENABLE_MAINNET_DEPLOYMENTS=false
+   NEXT_PUBLIC_APP_URL=https://<your-app>.up.railway.app
+   ```
+   Click **Deploy** to apply the staged variable changes.
+4. **Networking → Generate Domain**.
+
+Without `FORGE_ALLOW_REMOTE_LOCAL_MODE=true`, local mode refuses every visitor that isn't on the server itself, and the app shows exactly which value it received. With it, **anyone who has the link can use the workspace**. The sidebar labels this "Public test · no sign-in". Keep the link private, and set up Supabase (below) before sharing it.
+
 ## 1. Supabase (required for multi-user hosting)
 
 1. Create a project at [supabase.com](https://supabase.com).

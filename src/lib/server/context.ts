@@ -2,7 +2,7 @@ import "server-only";
 import { cookies, headers } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
-import { getConfig } from "./config";
+import { getConfig, parseFlag } from "./config";
 import { HttpError } from "./http";
 import { LocalStore } from "./store/local";
 import { SupabaseStore } from "./store/supabase";
@@ -57,10 +57,17 @@ export async function getContext(): Promise<RequestContext> {
   if (cfg.storageMode === "local") {
     const host = hostnameOf(h.get("x-forwarded-host") ?? h.get("host"));
     if (!cfg.allowRemoteLocalMode && !LOOPBACK.has(host)) {
+      const raw = cfg.remoteFlagRaw;
+      const state =
+        raw === null || raw.trim() === ""
+          ? "FORGE_ALLOW_REMOTE_LOCAL_MODE is not set on this server."
+          : parseFlag(raw) === "invalid"
+            ? `FORGE_ALLOW_REMOTE_LOCAL_MODE is set to "${raw.slice(0, 40)}", which is not recognised. Use true.`
+            : `FORGE_ALLOW_REMOTE_LOCAL_MODE is set to "${raw.slice(0, 40)}" (off).`;
       throw new HttpError(
         403,
         "local_mode_remote_access",
-        "This 4ORGE server runs in local mode (no authentication) and only accepts requests from this machine. Configure Supabase to host it for others.",
+        `This 4ORGE server runs in local mode (no sign-in), so it only accepts requests from the machine it runs on. ${state}`,
       );
     }
     return {

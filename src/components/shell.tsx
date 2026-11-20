@@ -170,7 +170,9 @@ function ProfileCard({ collapsed }: { collapsed: boolean }) {
           <>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-[14px] font-medium text-text">{local ? "Local workspace" : name}</span>
-              <span className="block truncate text-xs text-muted">{local ? "Stored on this machine" : "Supabase · cloud"}</span>
+              <span className={cn("block truncate text-xs", config.remoteAccess ? "text-warn" : "text-muted")}>
+                {config.remoteAccess ? "Public test · no sign-in" : local ? "Stored on this machine" : "Supabase · cloud"}
+              </span>
             </span>
             <ChevronsUpDown className="size-4 text-faint" />
           </>
@@ -180,8 +182,15 @@ function ProfileCard({ collapsed }: { collapsed: boolean }) {
         <div className="absolute bottom-full left-0 z-50 mb-2 w-72 rounded-2xl border border-line bg-panel p-4 text-[13px] text-muted shadow-pop">
           {local ? (
             <>
-              <div className="font-medium text-text">Local mode</div>
-              <p className="mt-1">Data is stored in <span className="mono text-text">.forge-data</span> on this computer and the app only accepts connections from it. Configure Supabase to host 4ORGE for a team.</p>
+              <div className="font-medium text-text">{config.remoteAccess ? "Public test mode" : "Local mode"}</div>
+              {config.remoteAccess ? (
+                <p className="mt-1">
+                  This server has no sign-in and accepts visitors from anywhere (<span className="mono text-text">FORGE_ALLOW_REMOTE_LOCAL_MODE</span>).
+                  Anyone with the link can use this workspace. Fine for private testing; add Supabase before sharing it.
+                </p>
+              ) : (
+                <p className="mt-1">Data is stored in <span className="mono text-text">.forge-data</span> on this computer and the app only accepts connections from it. Configure Supabase to host 4ORGE for a team.</p>
+              )}
             </>
           ) : (
             <>

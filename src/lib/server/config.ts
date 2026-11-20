@@ -2,10 +2,23 @@ import "server-only";
 import path from "node:path";
 import type { NetworkFlags } from "../networks";
 
+/**
+ * Parse a boolean environment flag. Tolerates the mistakes hosting dashboards
+ * make easy (surrounding spaces or quotes, any letter case).
+ * Returns null for an unset/empty value and "invalid" for anything unrecognised.
+ */
+export function parseFlag(raw: string | undefined): boolean | null | "invalid" {
+  if (raw === undefined) return null;
+  const v = raw.trim().replace(/^(['"])(.*)\1$/, "$2").trim().toLowerCase();
+  if (v === "") return null;
+  if (["1", "true", "yes", "on"].includes(v)) return true;
+  if (["0", "false", "no", "off"].includes(v)) return false;
+  return "invalid";
+}
+
 function flag(name: string, fallback: boolean): boolean {
-  const v = process.env[name];
-  if (v === undefined || v === "") return fallback;
-  return ["1", "true", "yes", "on"].includes(v.toLowerCase());
+  const v = parseFlag(process.env[name]);
+  return v === null || v === "invalid" ? fallback : v;
 }
 
 export type StorageMode = "local" | "supabase";
@@ -21,6 +34,8 @@ export interface ServerConfig {
   networkFlags: NetworkFlags;
   testRunner: TestRunnerMode;
   allowRemoteLocalMode: boolean;
+  /** Raw FORGE_ALLOW_REMOTE_LOCAL_MODE value, kept only to explain a refusal (it is not a secret). */
+  remoteFlagRaw: string | null;
   github: { clientId: string | null; clientSecret: string | null; configured: boolean };
   sessionSecret: string | null;
   appUrl: string | null;
@@ -65,6 +80,7 @@ export function getConfig(): ServerConfig {
     },
     testRunner,
     allowRemoteLocalMode: flag("FORGE_ALLOW_REMOTE_LOCAL_MODE", false),
+    remoteFlagRaw: process.env.FORGE_ALLOW_REMOTE_LOCAL_MODE ?? null,
     github: { clientId, clientSecret, configured: Boolean(clientId && clientSecret && sessionSecret) },
     sessionSecret,
     appUrl: process.env.NEXT_PUBLIC_APP_URL || null,
@@ -80,6 +96,8 @@ export function publicConfig() {
     networkFlags: c.networkFlags,
     testRunner: c.testRunner,
     githubConfigured: c.github.configured,
+    /** Local mode opened to the network without sign-in (testing only). */
+    remoteAccess: c.storageMode === "local" && c.allowRemoteLocalMode,
   };
 }
 export type PublicConfig = ReturnType<typeof publicConfig>;

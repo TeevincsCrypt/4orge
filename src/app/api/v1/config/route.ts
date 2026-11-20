@@ -7,14 +7,18 @@ export async function GET() {
   try {
     let user: { id: string; label: string } | null = null;
     let authError: string | null = null;
+    let authMessage: string | null = null;
     try {
       const ctx = await getContext();
       user = { id: ctx.userId, label: ctx.userLabel };
     } catch (e) {
-      if (e instanceof HttpError) authError = e.code;
+      if (e instanceof HttpError) {
+        authError = e.code;
+        authMessage = e.message;
+      }
       else throw e;
     }
-    return json({ ...publicConfig(), user, authError, apiVersion: "v1" });
+    return json({ ...publicConfig(), user, authError, authMessage, apiVersion: "v1" });
   } catch (e) {
     return errorResponse(e);
   }

@@ -516,6 +516,7 @@ export function WalletButton() {
               <span className="text-text">{network.name}</span>
             </div>
           </div>
+          <WalletBalance address={w.address} />
           {mismatch && (
             <div className="mt-3 space-y-2">
               <p className="text-xs text-warn">Your wallet is on a different network than the one selected in 4ORGE.</p>
@@ -556,6 +557,42 @@ export function WalletButton() {
               Disconnect
             </button>
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Real balance of the connected account on the selected 4ORGE network, read from the chain. */
+function WalletBalance({ address }: { address: string }) {
+  const { network } = useApp();
+  const [state, setState] = useState<{ key: string; formatted?: string; symbol?: string; error?: string } | null>(null);
+  const key = `${network.id}:${address}`;
+  useEffect(() => {
+    let alive = true;
+    api<{ formatted: string; symbol: string }>(`/networks/${network.id}/balance?address=${address}`)
+      .then((r) => alive && setState({ key, formatted: r.formatted, symbol: r.symbol }))
+      .catch((e) => alive && setState({ key, error: (e as Error).message }));
+    return () => {
+      alive = false;
+    };
+  }, [key, network.id, address]);
+  const current = state?.key === key ? state : null;
+  const amount = current?.formatted !== undefined ? Number(current.formatted) : null;
+  return (
+    <div className="mt-3 rounded-xl border border-line px-3 py-2.5">
+      <div className="text-xs text-muted">Balance on {network.name}</div>
+      {!current && <div className="mt-0.5 text-sm text-faint">Checking…</div>}
+      {current?.error && <div className="mt-0.5 text-xs text-bad">{current.error}</div>}
+      {amount !== null && (
+        <div className="mt-0.5 flex items-baseline justify-between gap-2">
+          <span className="text-lg font-medium text-text tabular-nums">
+            {amount === 0 ? "0" : amount < 0.0001 ? "< 0.0001" : amount.toLocaleString(undefined, { maximumFractionDigits: 4 })}{" "}
+            <span className="text-sm text-muted">{current?.symbol}</span>
+          </span>
+          {amount === 0 && network.faucetUrl && (
+            <a href={network.faucetUrl} target="_blank" rel="noreferrer" className="text-xs font-medium text-accent">Get test QIE →</a>
+          )}
         </div>
       )}
     </div>

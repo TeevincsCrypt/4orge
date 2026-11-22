@@ -9,7 +9,17 @@ import { api, useApi } from "@/lib/client/api";
 import { validateRpcUrl } from "@/lib/networks";
 
 interface Status {
-  rpc: { ok: boolean; actualChainId: number | null; expectedChainId: number; blockNumber: string | null; latencyMs: number | null; error: string | null; rpcUrl: string; deploymentsAllowed: boolean };
+  rpc: {
+    ok: boolean;
+    actualChainId: number | null;
+    expectedChainId: number;
+    blockNumber: string | null;
+    latencyMs: number | null;
+    error: string | null;
+    rpcUrl: string;
+    deploymentsAllowed: boolean;
+    endpoints?: { url: string; ok: boolean; chainId: number | null; latencyMs: number | null; error: string | null }[];
+  };
   explorer: { kind: "blockscout" | "none" | "unreachable"; detail: string };
 }
 
@@ -74,11 +84,24 @@ function NetworkCard({ network: n, selected, onSelect, onSaved }: { network: Cli
               <Button size="sm" variant="ghost" icon={<RefreshCw className="size-3.5" />} loading={status.loading} onClick={() => status.reload()}>Check</Button>
             </div>
             {s ? (
-              s.ok ? (
-                <p className="mt-1 text-ok">✓ Chain ID {s.actualChainId} verified · block {s.blockNumber} · {s.latencyMs} ms</p>
-              ) : (
-                <p className="mt-1 text-bad">{s.error}</p>
-              )
+              <>
+                {s.ok ? (
+                  <p className="mt-1 text-ok">✓ Chain ID {s.actualChainId} verified · block {s.blockNumber} · {s.latencyMs} ms <span className="text-muted">via {new URL(s.rpcUrl).host}</span></p>
+                ) : (
+                  <p className="mt-1 text-bad">{s.actualChainId !== null ? s.error : "No RPC endpoint answered correctly from the 4ORGE server."}</p>
+                )}
+                {s.endpoints && s.endpoints.length > 0 && (
+                  <ul className="mt-2 space-y-1 border-t border-line pt-2 text-xs">
+                    {s.endpoints.map((ep) => (
+                      <li key={ep.url} className="flex items-start gap-2">
+                        <span className={ep.ok ? "text-ok" : "text-bad"} aria-label={ep.ok ? "working" : "failed"}>{ep.ok ? "✓" : "✗"}</span>
+                        <span className="mono shrink-0 text-text">{new URL(ep.url).host}</span>
+                        <span className="min-w-0 text-muted [overflow-wrap:anywhere]">{ep.ok ? `${ep.latencyMs} ms` : ep.error}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
             ) : (
               <p className="mt-1 text-faint">Checking…</p>
             )}

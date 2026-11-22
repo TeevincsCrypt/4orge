@@ -3,8 +3,11 @@ import { DEFAULT_NETWORK_ID, NETWORKS, isDeploymentAllowed, listNetworks, toAddC
 
 describe("QIE networks", () => {
   it("uses the specified chain IDs and endpoints", () => {
-    expect(NETWORKS["qie-testnet"]).toMatchObject({ chainId: 1983, rpcUrls: ["https://rpc1testnet.qie.digital"], explorerUrl: "https://testnet.qie.digital" });
-    expect(NETWORKS["qie-mainnet"]).toMatchObject({ chainId: 1990, rpcUrls: ["https://rpc1mainnet.qie.digital"], explorerUrl: "https://mainnet.qie.digital" });
+    expect(NETWORKS["qie-testnet"]).toMatchObject({ chainId: 1983, explorerUrl: "https://testnet.qie.digital" });
+    expect(NETWORKS["qie-testnet"].rpcUrls[0]).toBe("https://rpc1testnet.qie.digital");
+    expect(NETWORKS["qie-testnet"].rpcUrls.every((u) => /^https:\/\/rpc\dtestnet\.qie\.digital$/.test(u))).toBe(true);
+    expect(NETWORKS["qie-mainnet"]).toMatchObject({ chainId: 1990, explorerUrl: "https://mainnet.qie.digital" });
+    expect(NETWORKS["qie-mainnet"].rpcUrls[0]).toBe("https://rpc1mainnet.qie.digital");
     expect(NETWORKS["qie-testnet"].nativeCurrency.symbol).toBe("QIE");
   });
   it("defaults to testnet", () => expect(DEFAULT_NETWORK_ID).toBe("qie-testnet"));

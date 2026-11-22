@@ -39,7 +39,14 @@ export const NETWORKS: Record<NetworkId, ForgeNetwork> = {
     name: "QIE Testnet",
     shortName: "Testnet",
     chainId: 1983,
-    rpcUrls: ["https://rpc1testnet.qie.digital"],
+    // rpc1 is the official endpoint; rpc2/4/5 are additional QIE endpoints reported to serve
+    // chain 1983. Every endpoint must prove the chain ID before 4ORGE uses it.
+    rpcUrls: [
+      "https://rpc1testnet.qie.digital",
+      "https://rpc2testnet.qie.digital",
+      "https://rpc4testnet.qie.digital",
+      "https://rpc5testnet.qie.digital",
+    ],
     explorerUrl: "https://testnet.qie.digital",
     explorerApiUrl: "https://testnet.qie.digital/api",
     nativeCurrency: { name: "QIE", symbol: "QIE", decimals: 18 },
@@ -54,7 +61,7 @@ export const NETWORKS: Record<NetworkId, ForgeNetwork> = {
     name: "QIE Mainnet",
     shortName: "Mainnet",
     chainId: 1990,
-    rpcUrls: ["https://rpc1mainnet.qie.digital"],
+    rpcUrls: ["https://rpc1mainnet.qie.digital", "https://rpc5mainnet.qie.digital"],
     explorerUrl: "https://mainnet.qie.digital",
     explorerApiUrl: "https://mainnet.qie.digital/api",
     nativeCurrency: { name: "QIE", symbol: "QIE", decimals: 18 },
@@ -140,7 +147,7 @@ export function toAddChainParams(network: ForgeNetwork, rpcOverride?: string | n
     chainId: `0x${network.chainId.toString(16)}`,
     chainName: network.name,
     nativeCurrency: network.nativeCurrency,
-    rpcUrls: [rpcOverride || network.rpcUrls[0]],
+    rpcUrls: rpcOverride ? [rpcOverride, ...network.rpcUrls] : network.rpcUrls,
     blockExplorerUrls: network.explorerUrl ? [network.explorerUrl] : undefined,
   };
 }

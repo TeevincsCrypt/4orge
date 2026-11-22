@@ -133,6 +133,7 @@ See the [deployment guide](docs/deployment-guide.md) for hosting.
 - [Architecture & security](docs/architecture.md)
 - [API reference](docs/api.md)
 - [Deployment guide](docs/deployment-guide.md)
+- [Project description](docs/PROJECT_DESCRIPTION.md)
 - [Development progress log](docs/PROGRESS.md)
 - [Brand assets & logo usage](docs/brand/README.md)
 

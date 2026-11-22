@@ -32,3 +32,10 @@ In the app, use the `<LogoMark />` and `<Logo />` components from `src/component
 - Keep clear space around the mark of at least the width of the F's stem.
 - Don't recolor, rotate, stretch or add effects to the mark. On dark backgrounds, place it on a white tile (as in the favicon), because the graphite "4" needs a light surface.
 - The smallest size is 16 px tall (favicon). Below that, the 4's counter closes up.
+
+## Social (X / Twitter)
+
+| File | Size | Use |
+|---|---|---|
+| `docs/brand/social/x-profile-800.png` | 800×800 (2× X's 400×400) | Profile picture. X crops it to a circle; the mark sits inside the safe area. |
+| `docs/brand/social/x-header-3000x1000.png` | 3000×1000 (2× X's 1500×500) | Header. Text and graphics avoid the bottom-left corner, where the profile picture overlaps. |

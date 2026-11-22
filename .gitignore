@@ -50,3 +50,7 @@ next-env.d.ts
 .forge-e2e-data/
 /runner/chain/artifacts/
 /runner/chain/cache/
+
+# promo video build output
+/media/promo/assets/
+/media/promo/out/

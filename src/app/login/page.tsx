@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { GitBranch, Mail } from "lucide-react";
 import { Logo } from "@/components/shell";
@@ -14,6 +14,17 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [githubEnabled, setGithubEnabled] = useState(false);
+
+  // Only offer GitHub sign-in when it is switched on in the Supabase project
+  // (the public auth settings endpoint lists the enabled providers).
+  useEffect(() => {
+    if (!url || !key) return;
+    fetch(`${url}/auth/v1/settings`, { headers: { apikey: key } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((s: { external?: Record<string, boolean> } | null) => setGithubEnabled(Boolean(s?.external?.github)))
+      .catch(() => setGithubEnabled(false));
+  }, []);
 
   if (!url || !key) {
     return (
@@ -55,16 +66,24 @@ export default function LoginPage() {
         )}
         {error && <Callout tone="bad">{error}</Callout>}
       </form>
-      <div className="my-5 flex items-center gap-3 text-xs text-faint">
-        <span className="h-px flex-1 bg-line" /> or <span className="h-px flex-1 bg-line" />
-      </div>
-      <Button
-        className="w-full"
-        icon={<GitBranch className="size-4" />}
-        onClick={() => supabase.auth.signInWithOAuth({ provider: "github", options: { redirectTo } })}
-      >
-        Continue with GitHub
-      </Button>
+      {githubEnabled && (
+        <>
+          <div className="my-5 flex items-center gap-3 text-xs text-faint">
+            <span className="h-px flex-1 bg-line" /> or <span className="h-px flex-1 bg-line" />
+          </div>
+          <Button
+            className="w-full"
+            icon={<GitBranch className="size-4" />}
+            onClick={async () => {
+              setError(null);
+              const { error } = await supabase.auth.signInWithOAuth({ provider: "github", options: { redirectTo } });
+              if (error) setError(error.message);
+            }}
+          >
+            Continue with GitHub
+          </Button>
+        </>
+      )}
     </Shell>
   );
 }

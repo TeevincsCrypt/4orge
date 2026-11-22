@@ -43,3 +43,24 @@ Bugs found and fixed during QA:
 2. **Explorer verification on QIE.** It runs automatically after a Testnet deployment. If QIE's explorer is not Blockscout-compatible, 4ORGE shows *unsupported*.
 3. **Optional:** Supabase credentials (multi-user hosting) and a GitHub OAuth App (private repo import). See the deployment guide.
 4. **Optional:** start your next Claude session in the **"4orge"** environment, which allows the QIE hosts, so live QIE checks can be run there.
+
+## Session 2 — 2026-11-19 to 2026-11-22
+
+### Built
+- Light redesign of the whole app, plus a public landing page at `/` (the dashboard moved to `/dashboard`).
+- Official 4F logo as a vector, favicon, app icons, social card, and X profile picture and header.
+- RPC fallbacks: QIE Testnet tries rpc1/2/4/5testnet, each verified by chain ID, with plain-language network errors and per-endpoint diagnostics.
+- Hosting fixes: tolerant env flags, clear local-mode refusal, sign-in redirects built from the public URL, and explicit database grants. Newer Supabase projects don't grant table access automatically.
+
+### Verified in production (Railway + hosted Supabase)
+| Check | Result |
+|---|---|
+| App deployed on Railway with a persistent volume | ✅ |
+| Supabase email sign-in and per-user data (after the permissions step) | ✅ |
+| QIE Testnet reachable from the hosted server, after the RPC fallback fix | ✅ reported by owner |
+
+### Still open
+1. **QIE Testnet deployment with a real wallet.** Blocked because the QIE faucet is temporarily unavailable. Everything up to the wallet signature can be tested meanwhile.
+2. **Explorer verification on QIE.** Runs after the first Testnet deployment.
+3. **GitHub sign-in.** Enable the GitHub provider in Supabase, then confirm the redirect returns to the Railway site.
+4. **Private repository import** (optional): needs a separate GitHub OAuth app.

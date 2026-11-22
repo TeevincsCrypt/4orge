@@ -139,7 +139,7 @@ The same documents are available inside the app under **Documentation**.
 
 - **QIE Testnet deployment has not yet been executed from the development environment.** The build sandbox could not reach QIE's RPC hosts. The full flow is proven end-to-end against a real local EVM (`npm run test:e2e`), and the QIE configuration (chain IDs 1983/1990) is checked live by `eth_chainId` whenever the app runs. Running the Testnet flow needs a funded Testnet wallet; see *Deploy your first contract* above.
 - **Explorer verification**: 4ORGE submits verification to explorers that expose the Blockscout API. Whether QIE's explorers expose it is detected at runtime. If they don't, the status is shown as *unsupported*, never as verified.
-- **Supabase mode** is implemented (adapter, auth, migration with RLS tested on Postgres) but has not been run against a hosted Supabase project, because no credentials were available during development.
+- **Supabase mode** runs in production on Railway with a hosted Supabase project (email sign-in, private per-user data). GitHub sign-in requires enabling the GitHub provider in Supabase (see the deployment guide).
 - Tests run with Hardhat 3. Hardhat 2 / ethers-style JavaScript tests may need small updates, and Foundry `forge-std` tests are not run yet.
 - Library linking (contracts with external libraries) and upgradeable-proxy deployments are not supported yet.
 - In local mode, JavaScript/TypeScript tests run as normal processes on your machine (they are your own code). For shared hosting, run the test runner in a container sandbox (see the architecture doc).

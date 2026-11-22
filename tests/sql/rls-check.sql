@@ -2,6 +2,7 @@
 -- Stubs the parts of Supabase the migration relies on (auth schema, roles).
 -- Run: tests/sql/run.sh
 \set ON_ERROR_STOP on
+set client_min_messages = notice;
 create role anon nologin;
 create role authenticated nologin;
 create schema auth;

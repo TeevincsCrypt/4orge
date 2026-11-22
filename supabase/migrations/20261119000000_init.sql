@@ -1,4 +1,6 @@
 -- 4ORGE initial schema
+-- Safe to run more than once, and safe in a Supabase project that already
+-- contains other objects: every helper, trigger and policy name is 4ORGE-specific.
 -- Every user-owned table has an owner_id that defaults to auth.uid() and is
 -- protected by Row Level Security: a user can only see and change their own
 -- rows. Child rows (files, builds, runbooks…) are additionally checked
@@ -10,7 +12,7 @@ create extension if not exists pgcrypto;
 -- ---------------------------------------------------------------------------
 -- Helpers
 -- ---------------------------------------------------------------------------
-create or replace function public.set_updated_at() returns trigger
+create or replace function public.forge_set_updated_at() returns trigger
 language plpgsql as $$
 begin
   new.updated_at = now();
@@ -20,7 +22,7 @@ end $$;
 -- ---------------------------------------------------------------------------
 -- users: public profile mirror of auth.users
 -- ---------------------------------------------------------------------------
-create table public.users (
+create table if not exists public.users (
   id uuid primary key references auth.users (id) on delete cascade,
   email text,
   display_name text,
@@ -29,7 +31,7 @@ create table public.users (
   updated_at timestamptz not null default now()
 );
 
-create or replace function public.handle_new_user() returns trigger
+create or replace function public.forge_handle_new_user() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
   insert into public.users (id, email, display_name, avatar_url)
@@ -41,16 +43,20 @@ begin
   )
   on conflict (id) do nothing;
   return new;
+exception when others then
+  -- Never block sign-up because of the optional profile mirror.
+  return new;
 end $$;
 
-create trigger on_auth_user_created
+drop trigger if exists forge_on_auth_user_created on auth.users;
+create trigger forge_on_auth_user_created
   after insert on auth.users
-  for each row execute function public.handle_new_user();
+  for each row execute function public.forge_handle_new_user();
 
 -- ---------------------------------------------------------------------------
 -- networks: reference data (read-only for clients)
 -- ---------------------------------------------------------------------------
-create table public.networks (
+create table if not exists public.networks (
   id text primary key,
   name text not null,
   chain_id integer not null unique,
@@ -64,12 +70,13 @@ create table public.networks (
 insert into public.networks (id, name, chain_id, rpc_url, explorer_url, kind, deployments_enabled) values
   ('qie-testnet', 'QIE Testnet', 1983, 'https://rpc1testnet.qie.digital', 'https://testnet.qie.digital', 'testnet', true),
   ('qie-mainnet', 'QIE Mainnet', 1990, 'https://rpc1mainnet.qie.digital', 'https://mainnet.qie.digital', 'mainnet', false),
-  ('local-hardhat', 'Local Hardhat', 31337, 'http://127.0.0.1:8545', null, 'development', true);
+  ('local-hardhat', 'Local Hardhat', 31337, 'http://127.0.0.1:8545', null, 'development', true)
+on conflict (id) do nothing;
 
 -- ---------------------------------------------------------------------------
 -- user_settings
 -- ---------------------------------------------------------------------------
-create table public.user_settings (
+create table if not exists public.user_settings (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null unique default auth.uid() references auth.users (id) on delete cascade,
   default_network text not null default 'qie-testnet' references public.networks (id),
@@ -82,7 +89,7 @@ create table public.user_settings (
 -- ---------------------------------------------------------------------------
 -- projects
 -- ---------------------------------------------------------------------------
-create table public.projects (
+create table if not exists public.projects (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   name text not null check (char_length(name) between 1 and 120),
@@ -95,9 +102,9 @@ create table public.projects (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-create index projects_owner_created_idx on public.projects (owner_id, created_at desc);
+create index if not exists projects_owner_created_idx on public.projects (owner_id, created_at desc);
 
-create table public.project_repositories (
+create table if not exists public.project_repositories (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   project_id uuid not null unique references public.projects (id) on delete cascade,
@@ -112,9 +119,9 @@ create table public.project_repositories (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-create index project_repositories_owner_idx on public.project_repositories (owner_id);
+create index if not exists project_repositories_owner_idx on public.project_repositories (owner_id);
 
-create table public.project_files (
+create table if not exists public.project_files (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   project_id uuid not null references public.projects (id) on delete cascade,
@@ -126,13 +133,13 @@ create table public.project_files (
   updated_at timestamptz not null default now(),
   unique (project_id, path)
 );
-create index project_files_project_idx on public.project_files (project_id);
-create index project_files_owner_idx on public.project_files (owner_id);
+create index if not exists project_files_project_idx on public.project_files (project_id);
+create index if not exists project_files_owner_idx on public.project_files (owner_id);
 
 -- ---------------------------------------------------------------------------
 -- builds & compiled contracts
 -- ---------------------------------------------------------------------------
-create table public.builds (
+create table if not exists public.builds (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   project_id uuid references public.projects (id) on delete set null,
@@ -149,10 +156,10 @@ create table public.builds (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-create index builds_project_created_idx on public.builds (project_id, created_at desc);
-create index builds_owner_idx on public.builds (owner_id);
+create index if not exists builds_project_created_idx on public.builds (project_id, created_at desc);
+create index if not exists builds_owner_idx on public.builds (owner_id);
 
-create table public.contracts (
+create table if not exists public.contracts (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   project_id uuid references public.projects (id) on delete set null,
@@ -169,14 +176,14 @@ create table public.contracts (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-create index contracts_build_idx on public.contracts (build_id);
-create index contracts_project_idx on public.contracts (project_id);
-create index contracts_owner_idx on public.contracts (owner_id);
+create index if not exists contracts_build_idx on public.contracts (build_id);
+create index if not exists contracts_project_idx on public.contracts (project_id);
+create index if not exists contracts_owner_idx on public.contracts (owner_id);
 
 -- ---------------------------------------------------------------------------
 -- test runs
 -- ---------------------------------------------------------------------------
-create table public.test_runs (
+create table if not exists public.test_runs (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   project_id uuid references public.projects (id) on delete set null,
@@ -193,13 +200,13 @@ create table public.test_runs (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-create index test_runs_project_created_idx on public.test_runs (project_id, created_at desc);
-create index test_runs_owner_idx on public.test_runs (owner_id);
+create index if not exists test_runs_project_created_idx on public.test_runs (project_id, created_at desc);
+create index if not exists test_runs_owner_idx on public.test_runs (owner_id);
 
 -- ---------------------------------------------------------------------------
 -- runbooks
 -- ---------------------------------------------------------------------------
-create table public.runbooks (
+create table if not exists public.runbooks (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   project_id uuid not null references public.projects (id) on delete cascade,
@@ -210,12 +217,12 @@ create table public.runbooks (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-create index runbooks_owner_updated_idx on public.runbooks (owner_id, updated_at desc);
-create index runbooks_project_idx on public.runbooks (project_id);
+create index if not exists runbooks_owner_updated_idx on public.runbooks (owner_id, updated_at desc);
+create index if not exists runbooks_project_idx on public.runbooks (project_id);
 
 -- Normalised copy of each saved Runbook's steps (the JSON definition in
 -- runbooks.definition is authoritative; this table supports querying/reporting).
-create table public.runbook_steps (
+create table if not exists public.runbook_steps (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   runbook_id uuid not null references public.runbooks (id) on delete cascade,
@@ -232,9 +239,9 @@ create table public.runbook_steps (
   unique (runbook_id, position),
   unique (runbook_id, step_key)
 );
-create index runbook_steps_owner_idx on public.runbook_steps (owner_id);
+create index if not exists runbook_steps_owner_idx on public.runbook_steps (owner_id);
 
-create table public.runbook_executions (
+create table if not exists public.runbook_executions (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   runbook_id uuid references public.runbooks (id) on delete set null,
@@ -249,10 +256,10 @@ create table public.runbook_executions (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-create index runbook_executions_owner_created_idx on public.runbook_executions (owner_id, created_at desc);
-create index runbook_executions_runbook_idx on public.runbook_executions (runbook_id, created_at desc);
+create index if not exists runbook_executions_owner_created_idx on public.runbook_executions (owner_id, created_at desc);
+create index if not exists runbook_executions_runbook_idx on public.runbook_executions (runbook_id, created_at desc);
 
-create table public.execution_logs (
+create table if not exists public.execution_logs (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   execution_id uuid not null references public.runbook_executions (id) on delete cascade,
@@ -263,12 +270,12 @@ create table public.execution_logs (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-create index execution_logs_execution_idx on public.execution_logs (execution_id, created_at);
+create index if not exists execution_logs_execution_idx on public.execution_logs (execution_id, created_at);
 
 -- ---------------------------------------------------------------------------
 -- deployments: permanent records (survive project deletion)
 -- ---------------------------------------------------------------------------
-create table public.deployments (
+create table if not exists public.deployments (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   project_id uuid references public.projects (id) on delete set null,
@@ -297,9 +304,9 @@ create table public.deployments (
   updated_at timestamptz not null default now(),
   unique (owner_id, chain_id, tx_hash)
 );
-create index deployments_owner_created_idx on public.deployments (owner_id, created_at desc);
-create index deployments_project_idx on public.deployments (project_id);
-create index deployments_address_idx on public.deployments (chain_id, contract_address);
+create index if not exists deployments_owner_created_idx on public.deployments (owner_id, created_at desc);
+create index if not exists deployments_project_idx on public.deployments (project_id);
+create index if not exists deployments_address_idx on public.deployments (chain_id, contract_address);
 
 -- ---------------------------------------------------------------------------
 -- updated_at triggers
@@ -312,9 +319,10 @@ begin
     'contracts', 'test_runs', 'runbooks', 'runbook_steps', 'runbook_executions',
     'execution_logs', 'deployments'
   ] loop
+    execute format('drop trigger if exists %I on public.%I', 'forge_' || t || '_set_updated_at', t);
     execute format(
-      'create trigger %I before update on public.%I for each row execute function public.set_updated_at()',
-      t || '_set_updated_at', t
+      'create trigger %I before update on public.%I for each row execute function public.forge_set_updated_at()',
+      'forge_' || t || '_set_updated_at', t
     );
   end loop;
 end $$;
@@ -338,72 +346,89 @@ alter table public.execution_logs enable row level security;
 alter table public.deployments enable row level security;
 
 -- Profiles: read/update your own.
+drop policy if exists users_select_own on public.users;
 create policy users_select_own on public.users for select using (id = auth.uid());
+drop policy if exists users_update_own on public.users;
 create policy users_update_own on public.users for update using (id = auth.uid()) with check (id = auth.uid());
 
 -- Networks: readable by signed-in users; no client writes.
+drop policy if exists networks_read on public.networks;
 create policy networks_read on public.networks for select to authenticated using (true);
 
 -- Helper: does the current user own this project?
-create or replace function public.owns_project(p uuid) returns boolean
+create or replace function public.forge_owns_project(p uuid) returns boolean
 language sql stable security invoker set search_path = public as $$
   select p is null or exists (select 1 from public.projects where id = p and owner_id = auth.uid());
 $$;
 
-create or replace function public.owns_runbook(r uuid) returns boolean
+create or replace function public.forge_owns_runbook(r uuid) returns boolean
 language sql stable security invoker set search_path = public as $$
   select r is null or exists (select 1 from public.runbooks where id = r and owner_id = auth.uid());
 $$;
 
-create or replace function public.owns_execution(e uuid) returns boolean
+create or replace function public.forge_owns_execution(e uuid) returns boolean
 language sql stable security invoker set search_path = public as $$
   select exists (select 1 from public.runbook_executions where id = e and owner_id = auth.uid());
 $$;
 
-create or replace function public.owns_build(b uuid) returns boolean
+create or replace function public.forge_owns_build(b uuid) returns boolean
 language sql stable security invoker set search_path = public as $$
   select b is null or exists (select 1 from public.builds where id = b and owner_id = auth.uid());
 $$;
 
 -- Simple owner tables.
+drop policy if exists user_settings_owner on public.user_settings;
 create policy user_settings_owner on public.user_settings
   for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+drop policy if exists projects_owner on public.projects;
 create policy projects_owner on public.projects
   for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
 
 -- Child tables: own the row AND own the parent.
+drop policy if exists project_repositories_owner on public.project_repositories;
 create policy project_repositories_owner on public.project_repositories
   for all using (owner_id = auth.uid())
-  with check (owner_id = auth.uid() and public.owns_project(project_id));
+  with check (owner_id = auth.uid() and public.forge_owns_project(project_id));
+drop policy if exists project_files_owner on public.project_files;
 create policy project_files_owner on public.project_files
   for all using (owner_id = auth.uid())
-  with check (owner_id = auth.uid() and public.owns_project(project_id));
+  with check (owner_id = auth.uid() and public.forge_owns_project(project_id));
+drop policy if exists builds_owner on public.builds;
 create policy builds_owner on public.builds
   for all using (owner_id = auth.uid())
-  with check (owner_id = auth.uid() and public.owns_project(project_id));
+  with check (owner_id = auth.uid() and public.forge_owns_project(project_id));
+drop policy if exists contracts_owner on public.contracts;
 create policy contracts_owner on public.contracts
   for all using (owner_id = auth.uid())
-  with check (owner_id = auth.uid() and public.owns_project(project_id) and public.owns_build(build_id));
+  with check (owner_id = auth.uid() and public.forge_owns_project(project_id) and public.forge_owns_build(build_id));
+drop policy if exists test_runs_owner on public.test_runs;
 create policy test_runs_owner on public.test_runs
   for all using (owner_id = auth.uid())
-  with check (owner_id = auth.uid() and public.owns_project(project_id));
+  with check (owner_id = auth.uid() and public.forge_owns_project(project_id));
+drop policy if exists runbooks_owner on public.runbooks;
 create policy runbooks_owner on public.runbooks
   for all using (owner_id = auth.uid())
-  with check (owner_id = auth.uid() and public.owns_project(project_id));
+  with check (owner_id = auth.uid() and public.forge_owns_project(project_id));
+drop policy if exists runbook_steps_owner on public.runbook_steps;
 create policy runbook_steps_owner on public.runbook_steps
   for all using (owner_id = auth.uid())
-  with check (owner_id = auth.uid() and public.owns_runbook(runbook_id));
+  with check (owner_id = auth.uid() and public.forge_owns_runbook(runbook_id));
+drop policy if exists runbook_executions_owner on public.runbook_executions;
 create policy runbook_executions_owner on public.runbook_executions
   for all using (owner_id = auth.uid())
-  with check (owner_id = auth.uid() and public.owns_project(project_id) and public.owns_runbook(runbook_id));
+  with check (owner_id = auth.uid() and public.forge_owns_project(project_id) and public.forge_owns_runbook(runbook_id));
+drop policy if exists execution_logs_owner on public.execution_logs;
 create policy execution_logs_owner on public.execution_logs
   for all using (owner_id = auth.uid())
-  with check (owner_id = auth.uid() and public.owns_execution(execution_id));
+  with check (owner_id = auth.uid() and public.forge_owns_execution(execution_id));
 
 -- Deployments are an audit trail: owners can read, insert and update status
 -- fields, but not delete them.
+drop policy if exists deployments_select on public.deployments;
 create policy deployments_select on public.deployments for select using (owner_id = auth.uid());
+drop policy if exists deployments_insert on public.deployments;
 create policy deployments_insert on public.deployments for insert
-  with check (owner_id = auth.uid() and public.owns_project(project_id) and public.owns_build(build_id));
+  with check (owner_id = auth.uid() and public.forge_owns_project(project_id) and public.forge_owns_build(build_id));
+drop policy if exists deployments_update on public.deployments;
 create policy deployments_update on public.deployments for update
   using (owner_id = auth.uid()) with check (owner_id = auth.uid());

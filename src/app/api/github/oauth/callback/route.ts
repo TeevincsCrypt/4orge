@@ -4,9 +4,10 @@ import { NextResponse } from "next/server";
 import { getConfig } from "@/lib/server/config";
 import { getContext } from "@/lib/server/context";
 import { GH_COOKIE, sealToken } from "@/lib/server/github";
+import { publicOrigin, publicUrl } from "@/lib/server/origin";
 
 export async function GET(req: Request) {
-  const back = (q: string) => NextResponse.redirect(new URL(`/settings?github=${q}`, req.url));
+  const back = (q: string) => NextResponse.redirect(publicUrl(req, `/settings?github=${q}`));
   try {
     await getContext();
     const cfg = getConfig();
@@ -35,7 +36,7 @@ export async function GET(req: Request) {
     jar.set(GH_COOKIE, sealToken({ token: token.access_token, login: user.login ?? "unknown", scope: token.scope ?? "" }), {
       httpOnly: true,
       sameSite: "lax",
-      secure: req.url.startsWith("https"),
+      secure: publicOrigin(req).startsWith("https"),
       maxAge: 60 * 60 * 24 * 30,
       path: "/",
     });

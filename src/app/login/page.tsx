@@ -50,7 +50,9 @@ export default function LoginPage() {
         <Button variant="primary" className="w-full" loading={state === "sending"} icon={<Mail className="size-4" />}>
           Email me a sign-in link
         </Button>
-        {state === "sent" && <Callout tone="ok">Check your inbox for the sign-in link.</Callout>}
+        {state === "sent" && (
+          <Callout tone="ok">Check your inbox for the sign-in link, and open it in this same browser (the link only works where you requested it).</Callout>
+        )}
         {error && <Callout tone="bad">{error}</Callout>}
       </form>
       <div className="my-5 flex items-center gap-3 text-xs text-faint">

@@ -198,7 +198,24 @@ function ProfileCard({ collapsed }: { collapsed: boolean }) {
               <p className="mt-1">Projects and deployments are private to your account (Row Level Security).</p>
             </>
           )}
-          <Link href="/settings" onClick={() => setOpen(false)} className="mt-3 inline-block font-medium text-accent">Settings →</Link>
+          <div className="mt-3 flex items-center justify-between">
+            <Link href="/settings" onClick={() => setOpen(false)} className="font-medium text-accent">Settings →</Link>
+            {!local && config.user && (
+              <button
+                onClick={async () => {
+                  const { createBrowserClient } = await import("@supabase/ssr");
+                  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+                  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+                  if (url && key) await createBrowserClient(url, key).auth.signOut();
+                  // Full reload on purpose: clears all in-memory workspace state after signing out.
+                  window.location.replace(new URL("/login", window.location.origin));
+                }}
+                className="flex items-center gap-1.5 font-medium text-muted hover:text-text"
+              >
+                <LogOut className="size-3.5" /> Sign out
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>

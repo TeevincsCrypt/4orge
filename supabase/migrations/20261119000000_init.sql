@@ -432,3 +432,29 @@ create policy deployments_insert on public.deployments for insert
 drop policy if exists deployments_update on public.deployments;
 create policy deployments_update on public.deployments for update
   using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+
+-- ---------------------------------------------------------------------------
+-- Privileges
+-- Newer Supabase projects no longer grant table access to API roles
+-- automatically, so grant exactly what signed-in users need. Row Level
+-- Security (above) still limits every row to its owner. Anonymous visitors
+-- get nothing; deployments cannot be deleted (audit trail).
+-- ---------------------------------------------------------------------------
+grant usage on schema public to authenticated;
+grant select, update on public.users to authenticated;
+grant select on public.networks to authenticated;
+grant select, insert, update, delete on
+  public.user_settings, public.projects, public.project_repositories, public.project_files,
+  public.builds, public.contracts, public.test_runs, public.runbooks, public.runbook_steps,
+  public.runbook_executions, public.execution_logs
+  to authenticated;
+grant select, insert, update on public.deployments to authenticated;
+grant execute on function
+  public.forge_owns_project(uuid), public.forge_owns_runbook(uuid),
+  public.forge_owns_execution(uuid), public.forge_owns_build(uuid)
+  to authenticated;
+revoke all on
+  public.users, public.networks, public.user_settings, public.projects, public.project_repositories,
+  public.project_files, public.builds, public.contracts, public.test_runs, public.runbooks,
+  public.runbook_steps, public.runbook_executions, public.execution_logs, public.deployments
+  from anon;

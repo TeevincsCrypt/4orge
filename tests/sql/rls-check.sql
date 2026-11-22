@@ -13,8 +13,9 @@ grant execute on function auth.uid() to authenticated, anon;
 
 \i supabase/migrations/20261119000000_init.sql
 
-grant usage on schema public to authenticated;
-grant select, insert, update, delete on all tables in schema public to authenticated;
+-- No manual grants here: the migration must grant everything the app needs
+-- (newer Supabase projects do not grant table access to API roles by default).
+revoke all on schema public from public;
 
 insert into auth.users (id, email) values
   ('11111111-1111-1111-1111-111111111111', 'alice@example.com'),
@@ -58,7 +59,13 @@ select count(*) = 0 as bob_update_affected_nothing from projects where name = 'p
 
 -- Alice cannot delete her deployment audit records.
 set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
-delete from deployments;
+do $$ begin
+  begin
+    delete from deployments;
+    raise exception 'FAIL: deployment record deleted';
+  exception when insufficient_privilege then raise notice 'ok: deployments cannot be deleted';
+  end;
+end $$;
 select count(*) = 1 as deployments_are_permanent from deployments;
 -- Constraints reject malformed chain data.
 do $$ begin
@@ -81,7 +88,7 @@ reset role;
 set role anon;
 do $$ begin
   begin
-    perform count(*) from projects;
+    perform count(*) from public.projects;
     raise exception 'FAIL: anon could read projects';
   exception when insufficient_privilege then raise notice 'ok: anon has no access';
   end;

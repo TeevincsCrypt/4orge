@@ -59,8 +59,9 @@ Bugs found and fixed during QA:
 | Supabase email sign-in and per-user data (after the permissions step) | ✅ |
 | QIE Testnet reachable from the hosted server, after the RPC fallback fix | ✅ reported by owner |
 
-### Still open
-1. **QIE Testnet deployment with a real wallet.** Blocked because the QIE faucet is temporarily unavailable. Everything up to the wallet signature can be tested meanwhile.
-2. **Explorer verification on QIE.** Runs after the first Testnet deployment.
-3. **GitHub sign-in.** Enable the GitHub provider in Supabase, then confirm the redirect returns to the Railway site.
-4. **Private repository import** (optional): needs a separate GitHub OAuth app.
+### Next step
+**Claim test QIE from the faucet, then run the [QIE Testnet test checklist](next-steps.md).** It covers:
+1. The first QIE Testnet deployment with a real wallet. This was blocked only by the faucet being unavailable.
+2. Explorer verification on QIE, which runs automatically after that deployment.
+
+Optional: GitHub sign-in (enable the provider in Supabase) and private repository import (separate GitHub OAuth app).

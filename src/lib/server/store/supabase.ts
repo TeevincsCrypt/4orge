@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CollectionName } from "@/lib/types";
 import type { DataStore, ListOptions, NewRow, Patch, Row } from "./types";
 import { NotFoundError } from "./types";
+import { HttpError } from "../http";
 
 /**
  * Supabase (Postgres) storage. The client is authenticated as the end user,
@@ -33,7 +34,17 @@ export class SupabaseStore implements DataStore {
     private client: SupabaseClient,
   ) {}
 
-  private fail(op: string, collection: string, error: { message: string } | null): never {
+  private fail(op: string, collection: string, error: { message: string; code?: string } | null): never {
+    // 42501 = insufficient_privilege: the API role was never granted access to the table
+    // (newer Supabase projects do not grant it automatically).
+    if (error?.code === "42501" && /permission denied for (table|schema|function)/.test(error.message)) {
+      console.error(`[4orge] database permissions missing: ${error.message}`);
+      throw new HttpError(
+        503,
+        "database_permissions_missing",
+        "The database is set up but signed-in users have not been granted access to 4ORGE's tables. Run the permissions step from the deployment guide in the Supabase SQL Editor, then reload.",
+      );
+    }
     throw new Error(`Database ${op} on ${collection} failed: ${error?.message ?? "unknown error"}`);
   }
 

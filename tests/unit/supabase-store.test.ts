@@ -68,3 +68,19 @@ describe("SupabaseStore", () => {
     expect(calls[0].ops[0]).toEqual(["select", ["id,compiler_version,input_hash"]]);
   });
 });
+
+describe("SupabaseStore permission errors", () => {
+  it("turns 'permission denied' into a clear, actionable error", async () => {
+    const client = {
+      from: () => {
+        const b: Record<string, unknown> = {};
+        for (const op of ["select", "eq", "order", "limit"]) b[op] = () => b;
+        b.then = (resolve: (v: unknown) => void) =>
+          resolve({ data: null, error: { code: "42501", message: "permission denied for table projects" } });
+        return b;
+      },
+    };
+    const store = new SupabaseStore("u1", client as never);
+    await expect(store.list("projects")).rejects.toMatchObject({ code: "database_permissions_missing", status: 503 });
+  });
+});

@@ -35,6 +35,30 @@ Without `FORGE_ALLOW_REMOTE_LOCAL_MODE=true`, local mode refuses every visitor t
 4. Optional: **Authentication → Providers → GitHub** to allow "Continue with GitHub".
 5. Copy the **Project URL** and **anon public key** from *Project Settings → API*.
 
+### Permissions step (fixes "permission denied for table …")
+
+Newer Supabase projects do not give signed-in users access to new tables automatically. The migration includes the grants. If your database was created with an earlier version of the migration, or you see **"permission denied for table …"** in the logs (or *"signed-in users have not been granted access"* in the app), run this once in **SQL Editor**:
+
+```sql
+grant usage on schema public to authenticated;
+grant select, update on public.users to authenticated;
+grant select on public.networks to authenticated;
+grant select, insert, update, delete on
+  public.user_settings, public.projects, public.project_repositories, public.project_files,
+  public.builds, public.contracts, public.test_runs, public.runbooks, public.runbook_steps,
+  public.runbook_executions, public.execution_logs
+  to authenticated;
+grant select, insert, update on public.deployments to authenticated;
+grant execute on all functions in schema public to authenticated;
+revoke all on
+  public.users, public.networks, public.user_settings, public.projects, public.project_repositories,
+  public.project_files, public.builds, public.contracts, public.test_runs, public.runbooks,
+  public.runbook_steps, public.runbook_executions, public.execution_logs, public.deployments
+  from anon;
+```
+
+It is safe to run more than once. Row Level Security still limits every user to their own rows.
+
 ## 2. Environment variables
 
 ```bash

@@ -1,11 +1,11 @@
 import "server-only";
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
-import { promises as fs } from "node:fs";
-import os from "node:os";
-import path from "node:path";
+import { Readable, Transform } from "node:stream";
+import { pipeline } from "node:stream/promises";
+import type { ReadableStream as WebReadableStream } from "node:stream/web";
 import { cookies } from "next/headers";
 import * as tar from "tar";
-import { acceptProjectFile } from "@/lib/project/paths";
+import { acceptProjectFile, MAX_FILE_BYTES, MAX_PROJECT_BYTES, MAX_PROJECT_FILES } from "@/lib/project/paths";
 import { getConfig } from "./config";
 import { HttpError } from "./http";
 
@@ -83,7 +83,7 @@ async function gh(pathname: string, token: string | null, init: RequestInit = {}
       ...(token ? { authorization: `Bearer ${token}` } : {}),
       ...(init.headers ?? {}),
     },
-    signal: AbortSignal.timeout(30_000),
+    signal: init.signal ?? AbortSignal.timeout(30_000),
   });
   if (res.status === 404) {
     throw new HttpError(
@@ -125,49 +125,86 @@ export interface DownloadedFile {
   content: string;
 }
 
-/** Download a repository snapshot and keep only files 4ORGE uses. */
-export async function downloadRepoFiles(owner: string, repo: string, sha: string, token: string | null) {
-  const res = await gh(`/repos/${owner}/${repo}/tarball/${sha}`, token);
-  const len = Number(res.headers.get("content-length") ?? 0);
-  if (len > 100 * 1024 * 1024) throw new HttpError(413, "repo_too_large", "Repository archive is larger than 100 MB.");
-  const buf = Buffer.from(await res.arrayBuffer());
-  if (buf.length > 100 * 1024 * 1024) throw new HttpError(413, "repo_too_large", "Repository archive is larger than 100 MB.");
+/** Largest compressed archive 4ORGE will read through (it is streamed, never held in memory). */
+export const MAX_ARCHIVE_BYTES = 1024 * 1024 * 1024;
+/** Time allowed for downloading and reading the archive (the import routes allow 120 s in total). */
+const ARCHIVE_TIMEOUT_MS = 100_000;
 
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "4orge-gh-"));
+/**
+ * Download a repository snapshot and keep only files 4ORGE uses.
+ *
+ * The tarball is streamed through the tar parser: entries 4ORGE does not use
+ * (images, frontends, node_modules, build output, …) are skipped as they pass,
+ * so a large repository costs download time but not memory or disk. Nothing is
+ * written to disk and only regular files are read (no symlinks or devices).
+ */
+export async function downloadRepoFiles(owner: string, repo: string, sha: string, token: string | null) {
+  const res = await gh(`/repos/${owner}/${repo}/tarball/${sha}`, token, { signal: AbortSignal.timeout(ARCHIVE_TIMEOUT_MS) });
+  const len = Number(res.headers.get("content-length") ?? 0);
+  if (len > MAX_ARCHIVE_BYTES) throw tooLarge();
+  if (!res.body) throw new HttpError(502, "github_error", "GitHub returned an empty repository archive.");
+  return extractProjectFiles(Readable.fromWeb(res.body as unknown as WebReadableStream<Uint8Array>));
+}
+
+function tooLarge() {
+  return new HttpError(
+    413,
+    "repo_too_large",
+    `Repository archive is larger than ${MAX_ARCHIVE_BYTES / 1024 / 1024 / 1024} GB. Import a smaller repository, or upload just its contracts folder.`,
+  );
+}
+
+/** Read a (gzipped) GitHub tarball stream and return the project files in it. Exported for tests. */
+export async function extractProjectFiles(source: Readable) {
   const files: DownloadedFile[] = [];
   const skipped: { path: string; reason: string }[] = [];
-  try {
-    const tgz = path.join(tmp, "repo.tgz");
-    await fs.writeFile(tgz, buf);
-    const out = path.join(tmp, "out");
-    await fs.mkdir(out);
-    await tar.x({
-      file: tgz,
-      cwd: out,
-      strip: 1,
-      filter: (p, entry) => {
-        const type = (entry as { type?: string }).type;
-        if (type && type !== "File" && type !== "OldFile") return false; // no symlinks/devices
-        const rel = p.split("/").slice(1).join("/");
-        const size = (entry as { size?: number }).size ?? 0;
-        const check = acceptProjectFile(rel, size);
-        if (!check.ok && rel.endsWith(".sol")) skipped.push({ path: rel, reason: check.reason });
-        return check.ok;
-      },
-    });
-    const walk = async (dir: string) => {
-      for (const ent of await fs.readdir(dir, { withFileTypes: true })) {
-        const full = path.join(dir, ent.name);
-        if (ent.isDirectory()) await walk(full);
-        else if (ent.isFile()) {
-          const rel = path.relative(out, full).split(path.sep).join("/");
-          files.push({ path: rel, content: await fs.readFile(full, "utf8") });
-        }
+  let kept = 0;
+  let seen = 0;
+
+  const relPath = (p: string) => p.split("/").slice(1).join("/"); // drop GitHub's "owner-repo-sha/" folder
+  const parser = new tar.Parser({
+    filter: (p, entry) => {
+      const type = (entry as { type?: string }).type;
+      if (type && type !== "File" && type !== "OldFile") return false; // no symlinks/devices
+      const rel = relPath(p);
+      const size = (entry as { size?: number }).size ?? 0;
+      const check = acceptProjectFile(rel, size);
+      if (!check.ok) {
+        if (rel.endsWith(".sol")) skipped.push({ path: rel, reason: check.reason });
+        return false;
       }
-    };
-    await walk(out);
-  } finally {
-    await fs.rm(tmp, { recursive: true, force: true });
+      // Stop collecting past the project limits; createProject reports the final error.
+      if (files.length >= MAX_PROJECT_FILES + 1 || kept + size > MAX_PROJECT_BYTES + MAX_FILE_BYTES) {
+        if (rel.endsWith(".sol")) skipped.push({ path: rel, reason: "Project size limit reached." });
+        return false;
+      }
+      kept += size;
+      return true;
+    },
+    onReadEntry: (entry) => {
+      const chunks: Buffer[] = [];
+      entry.on("data", (c: Buffer) => chunks.push(c));
+      entry.on("end", () => files.push({ path: relPath(entry.path), content: Buffer.concat(chunks).toString("utf8") }));
+    },
+  });
+
+  const meter = new Transform({
+    transform(chunk: Buffer, _enc, cb) {
+      seen += chunk.length;
+      if (seen > MAX_ARCHIVE_BYTES) return cb(tooLarge());
+      cb(null, chunk);
+    },
+  });
+
+  try {
+    await pipeline(source, meter, parser);
+  } catch (e) {
+    if (e instanceof HttpError) throw e;
+    const name = (e as { name?: string }).name;
+    if (name === "TimeoutError" || name === "AbortError") {
+      throw new HttpError(504, "github_timeout", "Downloading the repository from GitHub took too long. Try a smaller repository or upload its contracts folder.");
+    }
+    throw new HttpError(502, "github_error", `Could not read the repository archive: ${(e as Error).message}`);
   }
   return { files, skipped };
 }

@@ -150,7 +150,7 @@ function FromGithub() {
       <div className="space-y-3">
         <Callout tone="blue" title="How import works">
           4ORGE downloads a snapshot of the commit, keeps only Solidity, test and configuration files (no node_modules, no binaries,
-          max 512 KB per file) and records the commit SHA so you can sync later. Nothing from the repository is executed during import.
+          max 512 KB per file; large repositories are streamed and everything else is skipped) and records the commit SHA so you can sync later. Nothing from the repository is executed during import.
         </Callout>
         {status.data && !status.data.configured && (
           <Callout tone="neutral" title="Public repositories only">

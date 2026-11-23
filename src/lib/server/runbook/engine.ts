@@ -250,15 +250,21 @@ export async function advanceExecution(
   });
 }
 
-export async function confirmStep(store: DataStore, userLabel: string, executionId: string, stepId: string) {
+/** Phrase the operator must type to confirm a deployment that spends real funds. */
+export const MAINNET_CONFIRM_PHRASE = "MAINNET";
+
+export async function confirmStep(store: DataStore, userLabel: string, executionId: string, stepId: string, typed?: string) {
   await withLock(executionId, async () => {
     const execution = await getExecution(store, executionId);
     const state = execution.steps.find((s) => s.stepId === stepId);
     if (!state || state.uses !== "human.confirm") throw badRequest("That step is not a human confirmation step.");
     if (state.status !== "waiting") throw conflict("This step is not waiting for confirmation.");
+    if (getNetwork(execution.network).kind === "mainnet" && (typed ?? "").trim() !== MAINNET_CONFIRM_PHRASE) {
+      throw badRequest(`This deployment spends real QIE on Mainnet. Type ${MAINNET_CONFIRM_PHRASE} to confirm.`);
+    }
     state.status = "succeeded";
     state.finishedAt = new Date().toISOString();
-    state.summary = `Confirmed by ${userLabel}.`;
+    state.summary = getNetwork(execution.network).kind === "mainnet" ? `Mainnet deployment confirmed by ${userLabel} (typed confirmation).` : `Confirmed by ${userLabel}.`;
     execution.context.confirmedBy = userLabel;
     await writeLog(store, execution.id, stepId, "info", state.summary);
     await save(store, execution);

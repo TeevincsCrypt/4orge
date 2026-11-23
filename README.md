@@ -10,7 +10,7 @@ Built for **QIE Blockchain Hackathon 3.0 — Developer Infrastructure**.
 
 ![Execution of a deployment Runbook](docs/screenshots/execution-success.png)
 
-> **▶ Next step:** claim test QIE from the faucet, then run the **[QIE Testnet test checklist](docs/next-steps.md)**. Everything else is deployed and working.
+> **▶ Next step:** the first real QIE deployment. Use Testnet if the faucet works, otherwise the **Mainnet route** with a small amount of real QIE. Both are in the **[checklist](docs/next-steps.md)**. Everything else is deployed and working.
 
 ---
 
@@ -108,7 +108,7 @@ Copy `.env.example` to `.env.local` and fill in only what you need. Everything i
 | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `FORGE_SESSION_SECRET` | GitHub OAuth for importing **private** repositories. Public repositories work without these. |
 | `FORGE_TEST_RUNNER` | `all` (default in local mode), `solidity` (default in Supabase mode) or `disabled`. |
 | `FORGE_ENABLE_LOCAL_CHAIN` | Shows the *Local Hardhat* network (chain 31337). |
-| `FORGE_ENABLE_MAINNET_DEPLOYMENTS` | **Off by default.** Mainnet deployments stay locked until the owner deliberately enables this. |
+| `FORGE_ENABLE_MAINNET_DEPLOYMENTS` | **Off by default.** Mainnet deployments stay locked until the owner deliberately enables this. When on, every Mainnet deployment still needs a review step and a typed **MAINNET** confirmation. |
 
 See the [deployment guide](docs/deployment-guide.md) for hosting.
 

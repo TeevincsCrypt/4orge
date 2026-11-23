@@ -91,3 +91,18 @@ describe("Runbook validation", () => {
     expect(validateRunbook({ ...def, steps }).ok).toBe(false);
   });
 });
+
+describe("Mainnet safeguards", () => {
+  it("rejects a Mainnet deployment Runbook without a human review step", () => {
+    const def = createRunbookTemplate("full-deploy", { name: "m", contract: "Counter", network: "qie-mainnet" });
+    def.steps = def.steps.filter((s) => s.uses !== "human.confirm");
+    const r = validateRunbook(def);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.some((e) => e.message.includes("human.confirm"))).toBe(true);
+  });
+  it("allows the same Runbook on Testnet (review optional there)", () => {
+    const def = createRunbookTemplate("full-deploy", { name: "t", contract: "Counter", network: "qie-testnet" });
+    def.steps = def.steps.filter((s) => s.uses !== "human.confirm");
+    expect(validateRunbook(def).ok).toBe(true);
+  });
+});

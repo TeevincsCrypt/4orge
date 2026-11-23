@@ -22,7 +22,12 @@ Configuration can drift, so 4ORGE never trusts the numbers above blindly:
 
 ## Mainnet
 
-Mainnet is shown for read-only checks, but **deployments are locked**. The server owner must set `FORGE_ENABLE_MAINNET_DEPLOYMENTS=true` deliberately to unlock them. Even then, every deployment requires a human review step (recommended) and a wallet signature. 4ORGE never broadcasts anything on its own.
+Mainnet is shown for read-only checks, but **deployments are locked**. The server owner must set `FORGE_ENABLE_MAINNET_DEPLOYMENTS=true` deliberately to unlock them. Even then, every Mainnet deployment must:
+- include a `human.confirm` step (the Runbook validator rejects it otherwise);
+- be confirmed by typing **MAINNET**, which the server enforces;
+- be signed in the operator's wallet.
+
+4ORGE never broadcasts anything on its own. Mainnet RPC endpoints (`rpc1mainnet`, `rpc5mainnet`) must report chain ID 1990 before they are used.
 
 ## Explorer verification
 

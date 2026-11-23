@@ -117,7 +117,7 @@ export default function ExecutionPage() {
               <div className="mt-2"><WalletButton /></div>
             </Callout>
           )}
-          {execution.status === "awaiting_confirmation" && next && <ConfirmPanel execution={execution} step={next} onConfirm={() => act("confirm", { stepId: next.stepId })} />}
+          {execution.status === "awaiting_confirmation" && next && <ConfirmPanel execution={execution} step={next} onConfirm={(typed) => act("confirm", { stepId: next.stepId, typed })} />}
           {execution.status === "awaiting_wallet" && next && (
             <WalletPanel
               execution={execution}
@@ -229,16 +229,32 @@ function DeploymentSummary({ execution }: { execution: RunbookExecution }) {
   );
 }
 
-function ConfirmPanel({ execution, step, onConfirm }: { execution: RunbookExecution; step: StepState; onConfirm: () => Promise<void> }) {
+function ConfirmPanel({ execution, step, onConfirm }: { execution: RunbookExecution; step: StepState; onConfirm: (typed?: string) => Promise<void> }) {
   const [busy, setBusy] = useState(false);
+  const [typed, setTyped] = useState("");
   const def = execution.definition.steps.find((s) => s.id === step.stepId);
   const message = def?.uses === "human.confirm" ? def.with?.message : undefined;
+  const mainnet = getNetwork(execution.network).kind === "mainnet";
+  const ready = !mainnet || typed.trim() === "MAINNET";
   return (
-    <Card padded={false} className="border-warn/40">
+    <Card padded={false} className={mainnet ? "border-bad/40" : "border-warn/40"}>
       <CardHeader title="Review before signing" description={message ?? "All automated checks have run. Confirm the deployment details below."} icon={<PenLine className="size-4" />} />
       <div className="space-y-4 p-5">
         <DeploymentSummary execution={execution} />
-        <Button variant="primary" loading={busy} onClick={async () => { setBusy(true); await onConfirm(); setBusy(false); }}>
+        {mainnet && (
+          <Callout tone="bad" title="This is QIE Mainnet — real funds">
+            Signing spends real QIE for gas, and the contract is deployed permanently and publicly. Double-check the constructor
+            arguments above (owners, supplies). Type <b>MAINNET</b> to continue.
+            <input
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              placeholder="MAINNET"
+              aria-label="Type MAINNET to confirm"
+              className="mono mt-2 block h-10 w-48 rounded-xl border border-bad/30 bg-panel px-3 text-sm text-text focus:outline-none focus:ring-4 focus:ring-bad/10"
+            />
+          </Callout>
+        )}
+        <Button variant="primary" disabled={!ready} loading={busy} onClick={async () => { setBusy(true); await onConfirm(mainnet ? typed.trim() : undefined); setBusy(false); }}>
           I have reviewed this — continue to wallet
         </Button>
       </div>
@@ -272,6 +288,7 @@ function WalletPanel({ execution, step, onResult }: { execution: RunbookExecutio
     <Card padded={false} className="border-accent/50">
       <CardHeader title="Wallet approval required" description="Your wallet will show its own confirmation. Nothing is sent unless you approve it there." icon={<Wallet className="size-4" />} />
       <div className="space-y-4 p-5">
+        {network.kind === "mainnet" && <Callout tone="bad">QIE Mainnet: approving in your wallet spends real QIE. Check the network and amount in your wallet before you approve.</Callout>}
         <DeploymentSummary execution={execution} />
         {!wallet.address && <Callout tone="blue">Connect the deployer wallet ({p.from}) to sign. <span className="mt-2 block"><WalletButton /></span></Callout>}
         {wrongAccount && <Callout tone="warn">The connected account is {wallet.address}. Switch to {p.from} in your wallet — the transaction was prepared and gas-estimated for that account.</Callout>}

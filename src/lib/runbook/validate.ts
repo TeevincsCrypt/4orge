@@ -78,6 +78,12 @@ export function validateRunbook(input: unknown): ValidationResult {
       message: "No human.confirm step: the deployment summary is still shown in the wallet step before signing.",
     });
   }
+  if (def.network === "qie-mainnet" && has("wallet.deploy") && !has("human.confirm")) {
+    errors.push({
+      path: "steps",
+      message: "Mainnet deployments spend real QIE: add a human.confirm step before wallet.deploy.",
+    });
+  }
   if (def.network === "qie-mainnet" && has("wallet.deploy")) {
     warnings.push({
       path: "network",

@@ -67,7 +67,7 @@ function DeployWizard() {
       });
       def.steps = def.steps
         .filter((s) => (runTests && hasTests) || s.uses !== "contracts.test")
-        .filter((s) => confirmStep || s.uses !== "human.confirm");
+        .filter((s) => confirmStep || network!.kind === "mainnet" || s.uses !== "human.confirm");
       const r = await api<{ runbook: Runbook }>("/runbooks", { body: { projectId, definition: def } });
       const e = await api<{ execution: RunbookExecution }>(`/runbooks/${r.runbook.id}/executions`, { body: { deployer: wallet.address ?? null } });
       router.push(`/runbooks/${r.runbook.id}/executions/${e.execution.id}`);
@@ -166,8 +166,8 @@ function DeployWizard() {
                 <span>Run tests first (required to pass){!hasTests && bundle.data && <span className="block text-xs text-warn">No tests in this project — consider generating one.</span>}</span>
               </label>
               <label className="flex items-start gap-2 text-muted">
-                <input type="checkbox" className="mt-1 accent-[#2a6fcc]" checked={confirmStep} onChange={(e) => setConfirmStep(e.target.checked)} />
-                Pause for my review before the wallet prompt
+                <input type="checkbox" className="mt-1 accent-[#2a6fcc]" checked={confirmStep || network?.kind === "mainnet"} disabled={network?.kind === "mainnet"} onChange={(e) => setConfirmStep(e.target.checked)} />
+                <span>Pause for my review before the wallet prompt{network?.kind === "mainnet" && <span className="block text-xs text-faint">Always on for Mainnet.</span>}</span>
               </label>
               <ol className="space-y-1 border-t border-line pt-3 text-xs text-muted">
                 <li>1. Load & validate project</li>
@@ -178,6 +178,9 @@ function DeployWizard() {
                 <li>{confirmStep ? 6 : 5}. Wallet signs & broadcasts</li>
                 <li>{confirmStep ? 7 : 6}. Receipt validated on-chain, recorded, verified</li>
               </ol>
+              {network?.kind === "mainnet" && network.deploymentsAllowed && (
+                <Callout tone="bad" title="QIE Mainnet — real funds">Gas is paid in real QIE and the contract is permanent and public. You&apos;ll be asked to type MAINNET before your wallet prompt.</Callout>
+              )}
               {!wallet.address && <Callout tone="blue">You can connect your wallet now or when the Runbook reaches the signing step.</Callout>}
               {error && <Callout tone="bad">{error}</Callout>}
               <Button variant="primary" className="w-full" disabled={!ready} loading={starting} icon={<Rocket className="size-4" />} onClick={start}>

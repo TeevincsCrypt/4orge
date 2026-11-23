@@ -1,4 +1,8 @@
-# Next step: QIE Testnet test
+# Next step: first real QIE deployment
+
+> **Faucet down? Use the Mainnet route below.** It's the same flow on QIE Mainnet, with real (small) QIE and extra safeguards.
+
+# Route A — QIE Testnet
 
 **Status:** 4ORGE is deployed on Railway with Supabase sign-in, and its server can reach QIE Testnet. Everything is ready for the first real deployment.
 
@@ -50,11 +54,32 @@ Claude will then record the real Testnet deployment in the README, fix anything 
 
 ---
 
+---
+
+# Route B — QIE Mainnet (when no test QIE is available)
+
+Mainnet deployments spend **real QIE**, and contracts are **permanent and public**. 4ORGE adds safeguards on Mainnet:
+- every deployment must include a human review step;
+- you must type **MAINNET** before the wallet prompt (the server enforces it);
+- "real funds" warnings appear in the wizard and at the wallet step.
+
+1. **Use a fresh wallet account with only a little QIE.** Create a new account in MetaMask or Rabby just for deployments, and send it a small amount of QIE (a few QIE is plenty for the Counter contract). Never use your main holdings wallet.
+2. **Unlock Mainnet on Railway:** Variables → add `FORGE_ENABLE_MAINNET_DEPLOYMENTS=true` → **Deploy**. Mainnet stays locked unless this is set.
+3. **Check the network:** **Network → Check** on QIE Mainnet. ✅ "Chain ID 1990 verified". If it fails, send Claude the per-endpoint list.
+4. **Check your balance:** connect the deployment wallet, select **QIE Mainnet** in the top bar, and open the wallet menu. It shows your live QIE balance.
+5. **Deploy:** on the Counter project, click **Deploy**, enter `7`, select **QIE Mainnet** → **Create Runbook & start**.
+6. **Review:** check everything, type **MAINNET**, then click continue.
+7. **Sign:** in your wallet, confirm the network is QIE Mainnet and the fee is small, then approve.
+8. **Result:** ✅ "Counter deployed and confirmed on QIE Mainnet", with a link to mainnet.qie.digital. Send Claude the screenshot and contract address (section 6 above).
+9. **Afterwards (optional):** remove `FORGE_ENABLE_MAINNET_DEPLOYMENTS` on Railway to lock Mainnet again until you need it.
+
 ## If something goes wrong
 
 | What you see | What to do |
 |---|---|
-| "does not have enough QIE to pay for gas" | The faucet tokens haven't arrived yet, or the wallet is on another account. Check the balance in your wallet. |
+| "does not have enough QIE to pay for gas" | The wallet has no QIE on that network, or another account is active. Check the balance in the 4ORGE wallet menu. |
+| "Deployments to QIE Mainnet are locked" | `FORGE_ENABLE_MAINNET_DEPLOYMENTS=true` is not set on Railway, or Railway hasn't redeployed yet. |
+| "Type MAINNET to confirm" | The Mainnet safety check. Type the word exactly, in capitals. |
 | "Your wallet is on a different network" | Click **Switch wallet to QIE Testnet**. |
 | "You rejected the request in your wallet" | Nothing was sent. Click **Retry** on the wallet step. |
 | Check network fails | Open **Network** → **Check** and send Claude the per-endpoint list (✓/✗ with reasons). |

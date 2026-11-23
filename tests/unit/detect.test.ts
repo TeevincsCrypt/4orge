@@ -36,4 +36,29 @@ describe("project detection (static, never executes config)", () => {
     expect(detection.testFiles.nodejs).toEqual(["test/Counter.ts"]);
     expect(detection.contracts.map((c) => c.name)).toEqual(["Counter"]);
   });
+  it("uses a config in a subfolder when the root has none (monorepos)", () => {
+    const { detection, compiler } = detectProject([
+      { path: "package.json", content: '{"name":"app"}' },
+      { path: "apps/web/hardhat.config.ts", content: "export default {}" }, // deeper: not chosen
+      {
+        path: "contracts/foundry.toml",
+        content: `[profile.default]\nsolc_version = "0.8.28"\nevm_version = "cancun"\noptimizer = true\noptimizer_runs = 200\nremappings = [\n  "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",\n  "forge-std/=lib/forge-std/src/",\n  "@local/=src/shared/",\n]`,
+      },
+      { path: "contracts/src/shared/Lib.sol", content: "pragma solidity ^0.8.20; library Lib {}" },
+      { path: "contracts/src/A.sol", content: "pragma solidity ^0.8.20; contract A {}" },
+    ]);
+    expect(detection.framework).toBe("foundry");
+    expect(detection.configFile).toBe("contracts/foundry.toml");
+    expect(compiler).toMatchObject({ version: "0.8.28", evmVersion: "cancun", optimizer: { enabled: true, runs: 200 } });
+    // Rebased to the root; the lib/ submodule remappings aren't in the project and are dropped.
+    expect(detection.remappings).toEqual(["@local/=contracts/src/shared/"]);
+    expect(detection.notes.join(" ")).toContain("Ignored 2 remapping(s)");
+  });
+  it("drops root remappings into missing git submodules but keeps node_modules ones", () => {
+    const { detection } = detectProject([
+      { path: "foundry.toml", content: `[profile.default]\nremappings = ["forge-std/=lib/forge-std/src/", "@oz/=node_modules/@openzeppelin/contracts/"]` },
+      { path: "src/A.sol", content: "pragma solidity ^0.8.20; contract A {}" },
+    ]);
+    expect(detection.remappings).toEqual(["@oz/=node_modules/@openzeppelin/contracts/"]);
+  });
 });

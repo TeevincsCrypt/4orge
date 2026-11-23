@@ -135,6 +135,31 @@ export function parseFoundryToml(text: string): { settings: Partial<CompilerSett
   return { settings, src, remappings };
 }
 
+const HARDHAT_CONFIGS = ["hardhat.config.ts", "hardhat.config.js", "hardhat.config.cjs", "hardhat.config.mjs", "hardhat.config.mts"];
+
+/** The project's config file: at the root, else the shallowest one in a subfolder (max. 2 levels). */
+function findConfig(files: FileLike[]): { path: string; kind: "hardhat" | "foundry" } | null {
+  const kindOf = (p: string) => {
+    const name = p.slice(p.lastIndexOf("/") + 1);
+    return HARDHAT_CONFIGS.includes(name) ? ("hardhat" as const) : name === "foundry.toml" ? ("foundry" as const) : null;
+  };
+  const candidates = files
+    .map((f) => ({ path: f.path, kind: kindOf(f.path), depth: f.path.split("/").length - 1 }))
+    .filter((c): c is { path: string; kind: "hardhat" | "foundry"; depth: number } => c.kind !== null && c.depth <= 2)
+    .sort((a, b) => a.depth - b.depth || (a.kind === b.kind ? a.path.localeCompare(b.path) : a.kind === "hardhat" ? -1 : 1));
+  return candidates[0] ?? null;
+}
+
+/** Make a remapping written relative to `base` (e.g. "contracts/") relative to the repository root. */
+function rebaseRemapping(r: string, base: string): string {
+  const eq = r.indexOf("=");
+  let left = r.slice(0, eq);
+  const target = r.slice(eq + 1).trim();
+  const colon = left.indexOf(":");
+  if (colon >= 0) left = `${base}${left.slice(0, colon)}:${left.slice(colon + 1)}`;
+  return `${left}=${target.startsWith("node_modules/") ? target : `${base}${target}`}`;
+}
+
 export function detectProject(files: FileLike[]): { detection: ProjectDetection; compiler: CompilerSettings } {
   const byPath = new Map(files.map((f) => [f.path, f]));
   const notes: string[] = [];
@@ -143,30 +168,48 @@ export function detectProject(files: FileLike[]): { detection: ProjectDetection;
   let compiler: CompilerSettings = { ...DEFAULT_COMPILER, optimizer: { ...DEFAULT_COMPILER.optimizer } };
   let remappings: string[] = [];
 
-  const hardhatConfig = ["hardhat.config.ts", "hardhat.config.js", "hardhat.config.cjs", "hardhat.config.mjs", "hardhat.config.mts"].find((p) =>
-    byPath.has(p),
-  );
-  if (hardhatConfig) {
+  // The config normally sits at the root. Monorepos often keep it in a
+  // subfolder (e.g. contracts/foundry.toml): then the shallowest one is used,
+  // and paths in it are relative to that folder.
+  const config = findConfig(files);
+  const base = config ? config.path.slice(0, config.path.lastIndexOf("/") + 1) : "";
+  if (config?.kind === "hardhat") {
     framework = "hardhat";
-    configFile = hardhatConfig;
-    compiler = { ...compiler, ...parseHardhatConfig(byPath.get(hardhatConfig)!.content) };
-  } else if (byPath.has("foundry.toml")) {
+    configFile = config.path;
+    compiler = { ...compiler, ...parseHardhatConfig(byPath.get(config.path)!.content) };
+  } else if (config?.kind === "foundry") {
     framework = "foundry";
-    configFile = "foundry.toml";
-    const parsed = parseFoundryToml(byPath.get("foundry.toml")!.content);
+    configFile = config.path;
+    const parsed = parseFoundryToml(byPath.get(config.path)!.content);
     compiler = { ...compiler, ...parsed.settings };
     remappings = parsed.remappings;
   }
+  if (base) notes.push(`Using ${config!.path} (no configuration file at the repository root).`);
 
-  if (byPath.has("remappings.txt")) {
+  const remapFile = byPath.get(`${base}remappings.txt`) ?? byPath.get("remappings.txt");
+  if (remapFile) {
     remappings = [
       ...remappings,
-      ...byPath
-        .get("remappings.txt")!
-        .content.split(/\r?\n/)
+      ...remapFile.content
+        .split(/\r?\n/)
         .map((l) => l.trim())
         .filter((l) => l && !l.startsWith("#") && l.includes("=")),
     ];
+  }
+  if (base) remappings = remappings.map((r) => rebaseRemapping(r, base));
+
+  // Remappings into git submodules (lib/…) point at folders that GitHub
+  // archives and uploads don't contain. Those imports resolve from npm instead
+  // (e.g. @openzeppelin/contracts, forge-std), so the remapping is dropped.
+  const unavailable = remappings.filter((r) => {
+    const target = r.slice(r.indexOf("=") + 1).trim();
+    return target && !target.startsWith("node_modules/") && !files.some((f) => f.path.startsWith(target));
+  });
+  if (unavailable.length) {
+    remappings = remappings.filter((r) => !unavailable.includes(r));
+    notes.push(
+      `Ignored ${unavailable.length} remapping(s) pointing to folders that aren't in the project (usually git submodules): ${unavailable.join(", ")}. Those imports are resolved from npm instead.`,
+    );
   }
 
   let dependencies: Record<string, string> = {};
@@ -202,7 +245,7 @@ export function detectProject(files: FileLike[]): { detection: ProjectDetection;
     );
   }
   if (framework === "foundry") {
-    notes.push("Foundry project detected: sources are compiled with solc; forge-std based tests are not run by 4ORGE yet.");
+    notes.push("Foundry project detected: sources are compiled with solc and forge-std tests run with Hardhat 3. Foundry-only features (ffi, forking, forge script) are not available.");
   }
 
   return {

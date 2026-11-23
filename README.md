@@ -144,7 +144,7 @@ The same documents are available inside the app under **Documentation**.
 - **No real QIE Testnet deployment yet. It only needs test QIE.** The hosted app reaches QIE Testnet, and the full flow is proven end-to-end against a real local EVM (`npm run test:e2e`). The QIE faucet was temporarily unavailable, so the first real deployment is the next step: see the [Testnet test checklist](docs/next-steps.md).
 - **Explorer verification**: 4ORGE submits verification to explorers that expose the Blockscout API. Whether QIE's explorers expose it is detected at runtime. If they don't, the status is shown as *unsupported*, never as verified.
 - **Supabase mode** runs in production on Railway with a hosted Supabase project (email sign-in, private per-user data). GitHub sign-in requires enabling the GitHub provider in Supabase (see the deployment guide).
-- Tests run with Hardhat 3. Hardhat 2 / ethers-style JavaScript tests may need small updates, and Foundry `forge-std` tests are not run yet.
+- Tests run with Hardhat 3. Foundry-style Solidity tests that use `forge-std` run too (4ORGE fetches forge-std 1.17.0 from its pinned GitHub release, because the npm copy is outdated). Tests that depend on Foundry-only features (`ffi`, forking via `foundry.toml` RPC aliases, `forge script`) may not, and Hardhat 2 / ethers-style JavaScript tests may need small updates.
 - Library linking (contracts with external libraries) and upgradeable-proxy deployments are not supported yet.
 - In local mode, JavaScript/TypeScript tests run as normal processes on your machine (they are your own code). For shared hosting, run the test runner in a container sandbox (see the architecture doc).
 
@@ -156,7 +156,7 @@ The same documents are available inside the app under **Documentation**.
 - Contract interaction console (read/write calls from the ABI).
 - Multi-contract Runbooks (deploy and wire several contracts, proxies, post-deploy calls).
 - CLI and CI integration (run Runbooks from GitHub Actions through the API with personal access tokens).
-- Foundry test execution and library linking.
+- Full Foundry compatibility (`foundry.toml` profiles, `lib/` submodules beyond forge-std) and library linking.
 
 ## License
 

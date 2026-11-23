@@ -117,7 +117,7 @@ The automated test suite includes a forged-hash attack, and 4ORGE rejects it.
 - A contract interaction console (read/write calls from the ABI).
 - Multi-contract Runbooks (deploy and wire several contracts, proxies, post-deploy calls).
 - Running Runbooks from CI (GitHub Actions) through the API with personal access tokens.
-- Foundry test execution and library linking.
+- Full Foundry compatibility (`foundry.toml` profiles, `lib/` submodules beyond forge-std) and library linking.
 
 ## Links
 - **Live app:** *(your Railway URL)*

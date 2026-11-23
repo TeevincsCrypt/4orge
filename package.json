@@ -1,0 +1,53 @@
+{
+  "name": "4orge",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:e2e": "node tests/e2e/deploy-flow.mjs",
+    "test:all": "npm run typecheck && npm run lint && npm test && npm run test:integration",
+    "chain": "node runner/node_modules/hardhat/dist/src/cli.js node --config runner/chain/hardhat.config.ts",
+    "setup:runner": "npm --prefix runner ci --no-audit --no-fund",
+    "postinstall": "npm --prefix runner ci --no-audit --no-fund || echo '[4orge] Could not install the Hardhat runner; run npm run setup:runner later.'"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.119.1",
+    "geist": "^1.9.2",
+    "lucide-react": "^1.75.0",
+    "marked": "^16.4.2",
+    "next": "16.4.6",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "semver": "^7.8.6",
+    "server-only": "^0.0.1",
+    "solc": "^0.8.38",
+    "tar": "^7.5.23",
+    "viem": "^2.58.0",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/turbopack": "4.3.3",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/semver": "^7.8.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.6",
+    "tailwindcss": "4.3.3",
+    "typescript": "^5",
+    "vitest": "^5.1.1"
+  },
+  "description": "4ORGE \u2014 smart contract deployment and automation workspace for QIE Blockchain",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.12"
+  }
+}

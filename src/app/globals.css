@@ -1,0 +1,219 @@
+@import "tailwindcss" source("..");
+
+/*
+ * 4ORGE design tokens — light, airy workspace: a soft lavender canvas, white
+ * cards with large radii, ink-black primary actions and pastel accents.
+ * Components use these through the Tailwind theme (bg-panel, text-muted, …).
+ */
+:root {
+  --bg: #f1f1f7;          /* app canvas */
+  --sidebar: #f5f5fa;
+  --panel: #ffffff;       /* cards */
+  --panel-2: #f7f7fb;     /* subtle fills, table heads, inputs */
+  --panel-3: #ededf5;     /* chips, hovers, tracks */
+  --line: #ebebf2;
+  --line-strong: #dcdce8;
+  --text: #16161d;
+  --muted: #6c6c80;
+  --faint: #9b9bad;
+  --ink: #14141b;         /* primary buttons */
+  --brand: #3d89e9;       /* logo blue */
+  --brand-graphite: #45484f; /* logo "4" */
+  --accent: #2a6fcc;      /* UI accent: logo blue deepened to 4.95:1 on white */
+  --accent-strong: #2360b8;
+  --accent-soft: #e5eefc;
+  --accent-mid: #b9d3f5;
+  --blue: #2a6fcc;
+  --blue-strong: #2360b8;
+  --rose: #d6416b;
+  --ok: #1f9d63;
+  --warn: #b7791f;
+  --bad: #d6416b;
+  --pastel-pink: linear-gradient(120deg, #fbe4ec 0%, #f6e7f3 100%);
+  --pastel-lilac: linear-gradient(120deg, #eee8f8 0%, #e3e9fa 100%);
+  --pastel-blue: linear-gradient(120deg, #e2ecfc 0%, #e4f1fb 100%);
+  --pastel-mint: linear-gradient(120deg, #e3f4ee 0%, #e6f0fa 100%);
+  --shadow-card: 0 1px 2px rgba(22, 22, 40, 0.04), 0 8px 24px -12px rgba(22, 22, 40, 0.08);
+  --shadow-pop: 0 2px 6px rgba(22, 22, 40, 0.06), 0 18px 40px -16px rgba(22, 22, 40, 0.22);
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-sidebar: var(--sidebar);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-panel-3: var(--panel-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-ink: var(--ink);
+  --color-brand: var(--brand);
+  --color-brand-graphite: var(--brand-graphite);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-mid: var(--accent-mid);
+  --color-blue: var(--blue);
+  --color-blue-strong: var(--blue-strong);
+  --color-rose: var(--rose);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+  --shadow-card: var(--shadow-card);
+  --shadow-pop: var(--shadow-pop);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "ss01", "cv11";
+}
+
+::selection {
+  background: color-mix(in oklab, var(--accent) 22%, transparent);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-feature-settings: "zero";
+}
+
+.bg-pastel-pink { background: var(--pastel-pink); }
+.bg-pastel-lilac { background: var(--pastel-lilac); }
+.bg-pastel-blue { background: var(--pastel-blue); }
+.bg-pastel-mint { background: var(--pastel-mint); }
+
+/* Diagonal hatch used for chart tracks (texture, not color, carries "empty"). */
+.hatch {
+  background-image: repeating-linear-gradient(135deg, rgba(61, 137, 233, 0.08) 0 2px, transparent 2px 8px);
+}
+
+/* Rendered Markdown (documentation pages and execution reports). */
+.prose-forge {
+  overflow-wrap: anywhere;
+  color: var(--muted);
+  font-size: 0.925rem;
+  line-height: 1.7;
+}
+.prose-forge h1 {
+  color: var(--text);
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 1rem;
+}
+.prose-forge h2 {
+  color: var(--text);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 2rem 0 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+.prose-forge h3 {
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 1.5rem 0 0.5rem;
+}
+.prose-forge p,
+.prose-forge ul,
+.prose-forge ol,
+.prose-forge table,
+.prose-forge pre,
+.prose-forge blockquote {
+  margin: 0 0 1rem;
+}
+.prose-forge ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+}
+.prose-forge ol {
+  list-style: decimal;
+  padding-left: 1.25rem;
+}
+.prose-forge li {
+  margin: 0.2rem 0;
+}
+.prose-forge a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.prose-forge strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.prose-forge code {
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  background: var(--panel-3);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+  color: var(--text);
+}
+.prose-forge pre {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  overflow-x: auto;
+}
+.prose-forge pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+.prose-forge table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  display: block;
+  overflow-x: auto;
+}
+.prose-forge th,
+.prose-forge td {
+  border: 1px solid var(--line);
+  padding: 0.45rem 0.65rem;
+  text-align: left;
+  vertical-align: top;
+}
+.prose-forge th {
+  color: var(--text);
+  background: var(--panel-2);
+  font-weight: 600;
+}
+.prose-forge blockquote {
+  border-left: 3px solid var(--accent);
+  padding-left: 1rem;
+  color: var(--muted);
+}
+.prose-forge hr {
+  border-color: var(--line);
+  margin: 1.5rem 0;
+}

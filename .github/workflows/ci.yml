@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "claude/**"]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install (app + Hardhat runner)
+        run: npm ci
+      - name: Cache Solidity compilers
+        uses: actions/cache@v4
+        with:
+          path: .forge-cache
+          key: forge-cache-${{ hashFiles('src/lib/project/templates.ts') }}
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - name: Integration tests (real solc + Hardhat)
+        run: npm run test:integration
+      - run: npm run build
+      - name: Supabase migration + RLS check
+        run: |
+          sudo apt-get install -y -q postgresql >/dev/null
+          sudo bash tests/sql/run.sh

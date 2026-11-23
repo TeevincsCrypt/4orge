@@ -132,7 +132,7 @@ export async function resolveSources(
       try {
         const pkg = await ensurePackage(pkgRef.name, opts.dependencies[pkgRef.name], notes);
         packages.set(pkg.name, pkg);
-        const content = await readPackageFile(pkg, pkgRef.subpath);
+        const content = await readPackageSource(pkg, pkgRef.subpath);
         if (content === null) {
           missing.push({
             importer: current,
@@ -149,7 +149,7 @@ export async function resolveSources(
     }
   }
 
-  return { sources, remappings: [...usedRemappings], packages: [...packages.values()], missing, notes };
+  return { sources, remappings: [...usedRemappings], packages: [...packages.values()], missing, notes: [...new Set(notes)] };
 }
 
 // ---------------------------------------------------------------------------
@@ -165,6 +165,8 @@ function pkgDir(name: string, version: string) {
 
 async function ensurePackage(name: string, requested: string | undefined, notes: string[]): Promise<ResolvedPackage> {
   if (!VALID_NAME.test(name)) throw new Error(`"${name}" is not a valid npm package name.`);
+  const pinned = PINNED_PACKAGES[name];
+  if (pinned) return ensurePinnedPackage(name, pinned, requested, notes);
   const spec = requested ?? "latest";
   if (/^(git|github:|https?:|file:|link:|workspace:)/.test(spec) || spec.includes("/")) {
     throw new Error(`${name}@${spec} is not an npm registry version; 4ORGE can only resolve registry packages.`);
@@ -203,12 +205,25 @@ async function ensurePackage(name: string, requested: string | undefined, notes:
 
 async function downloadPackage(dist: { tarball: string; integrity?: string }, dir: string) {
   if (!dist.integrity?.startsWith("sha512-")) throw new Error("Registry did not provide a sha512 integrity hash.");
-  const res = await fetch(dist.tarball, { signal: AbortSignal.timeout(60_000) });
+  const buf = await downloadTarball(dist.tarball);
+  const digest = `sha512-${createHash("sha512").update(buf).digest("base64")}`;
+  if (digest !== dist.integrity) throw new Error("Package integrity check failed.");
+  await extractPackage(buf, dir);
+}
+
+async function downloadTarball(url: string): Promise<Buffer> {
+  const res = await fetch(url, { signal: AbortSignal.timeout(60_000) });
   if (!res.ok) throw new Error(`Package download failed (${res.status}).`);
   const buf = Buffer.from(await res.arrayBuffer());
   if (buf.length > 50 * 1024 * 1024) throw new Error("Package tarball is larger than 50 MB.");
-  const digest = `sha512-${createHash("sha512").update(buf).digest("base64")}`;
-  if (digest !== dist.integrity) throw new Error("Package integrity check failed.");
+  return buf;
+}
+
+/**
+ * Unpack the Solidity sources and package.json of a package tarball into `dir`.
+ * `verify` runs on the unpacked folder before it is moved into place.
+ */
+async function extractPackage(buf: Buffer, dir: string, verify?: (unpacked: string) => Promise<void>) {
   // Extract next to the final folder: a rename only works within one filesystem,
   // and the cache often lives on a mounted volume (e.g. /data) separate from /tmp.
   await fs.mkdir(path.dirname(dir), { recursive: true });
@@ -228,12 +243,101 @@ async function downloadPackage(dist: { tarball: string; integrity?: string }, di
         return p.endsWith(".sol") || /^[^/]+\/package\.json$/.test(p);
       },
     });
+    if (verify) await verify(out);
     await fs.rm(dir, { recursive: true, force: true });
     await fs.rename(out, dir);
     await fs.writeFile(path.join(dir, ".complete"), new Date().toISOString());
   } finally {
     await fs.rm(tmp, { recursive: true, force: true });
   }
+}
+
+// ---------------------------------------------------------------------------
+// Packages pinned to an upstream release
+// ---------------------------------------------------------------------------
+
+interface PinnedPackage {
+  version: string;
+  repository: string;
+  commit: string;
+  /** contentHash() of the unpacked .sol files and package.json. */
+  contentHash: string;
+}
+
+/**
+ * Packages whose npm releases are abandoned. forge-std (Foundry's test library)
+ * was last published to npm as 1.1.2 in 2022; current releases exist only on
+ * GitHub, which is also how Hardhat 3 recommends installing it. These are
+ * downloaded from a pinned commit and checked against a hash of their contents
+ * (GitHub archives carry no registry integrity hash), so the code that runs is
+ * exactly the code that was reviewed here.
+ */
+export const PINNED_PACKAGES: Record<string, PinnedPackage> = {
+  "forge-std": {
+    version: "1.17.0",
+    repository: "foundry-rs/forge-std",
+    commit: "f3dae6e6ee381f25eb6a246f7da9b85c91a68219",
+    contentHash: "sha256-5993bc33d177b48e4d832034f6835353b1e025a97d8ad78ed4a5d2001fdd2ef6",
+  },
+};
+
+/** Deterministic hash of an unpacked package: every file's path and SHA-256, sorted by path. */
+export async function contentHash(root: string): Promise<string> {
+  const entries: string[] = [];
+  const walk = async (dir: string) => {
+    for (const ent of await fs.readdir(dir, { withFileTypes: true })) {
+      const full = path.join(dir, ent.name);
+      if (ent.isDirectory()) await walk(full);
+      else if (ent.isFile()) {
+        const rel = path.relative(root, full).split(path.sep).join("/");
+        entries.push(`${rel}\n${createHash("sha256").update(await fs.readFile(full)).digest("hex")}\n`);
+      }
+    }
+  };
+  await walk(root);
+  entries.sort();
+  return `sha256-${createHash("sha256").update(entries.join("")).digest("hex")}`;
+}
+
+async function ensurePinnedPackage(name: string, pin: PinnedPackage, requested: string | undefined, notes: string[]): Promise<ResolvedPackage> {
+  const key = `${name}@pinned`;
+  const existing = inflight.get(key);
+  if (existing) {
+    const pkg = await existing;
+    return { ...pkg, requested: requested ?? "latest" };
+  }
+  const job = (async () => {
+    const dir = pkgDir(name, pin.version);
+    try {
+      await fs.access(path.join(dir, ".complete"));
+    } catch {
+      const buf = await downloadTarball(`https://codeload.github.com/${pin.repository}/tar.gz/${pin.commit}`);
+      await extractPackage(buf, dir, async (unpacked) => {
+        if ((await contentHash(unpacked)) !== pin.contentHash) {
+          throw new Error(`${name} ${pin.version} from GitHub does not match its pinned content hash.`);
+        }
+      });
+    }
+    return { name, version: pin.version, requested: requested ?? "latest" };
+  })().finally(() => inflight.delete(key));
+  inflight.set(key, job);
+  const pkg = await job;
+  notes.push(
+    `${name} ${pin.version} is fetched from GitHub (${pin.repository}) because its npm package is outdated${
+      requested ? `; the requested "${requested}" was replaced by this pinned release` : ""
+    }.`,
+  );
+  return pkg;
+}
+
+/**
+ * Read an imported file from a package. forge-std keeps its sources in src/,
+ * and "forge-std/Test.sol" means "src/Test.sol": the same rule Hardhat 3 applies.
+ */
+async function readPackageSource(pkg: ResolvedPackage, subpath: string): Promise<string | null> {
+  const direct = await readPackageFile(pkg, subpath);
+  if (direct !== null || pkg.name !== "forge-std" || subpath.startsWith("src/")) return direct;
+  return readPackageFile(pkg, `src/${subpath}`);
 }
 
 async function readPackageFile(pkg: ResolvedPackage, subpath: string): Promise<string | null> {

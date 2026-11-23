@@ -1,7 +1,6 @@
 import "server-only";
 import { createHash } from "node:crypto";
 import { promises as fs, readFileSync } from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import semver from "semver";
 import * as tar from "tar";
@@ -164,7 +163,10 @@ async function downloadFromNpm(version: string, target: string) {
   const digest = `sha512-${createHash("sha512").update(buf).digest("base64")}`;
   if (digest !== integrity) throw new Error("tarball integrity check failed");
 
-  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "4orge-solc-"));
+  // Extract next to the target: a rename only works within one filesystem, and
+  // the cache often lives on a mounted volume (e.g. /data) separate from /tmp.
+  await fs.mkdir(path.dirname(target), { recursive: true });
+  const tmpDir = await fs.mkdtemp(path.join(path.dirname(target), ".tmp-solc-"));
   try {
     const tgz = path.join(tmpDir, "solc.tgz");
     await fs.writeFile(tgz, buf);

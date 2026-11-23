@@ -1,7 +1,6 @@
 import "server-only";
 import { createHash } from "node:crypto";
 import { promises as fs } from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import semver from "semver";
 import * as tar from "tar";
@@ -210,7 +209,10 @@ async function downloadPackage(dist: { tarball: string; integrity?: string }, di
   if (buf.length > 50 * 1024 * 1024) throw new Error("Package tarball is larger than 50 MB.");
   const digest = `sha512-${createHash("sha512").update(buf).digest("base64")}`;
   if (digest !== dist.integrity) throw new Error("Package integrity check failed.");
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "4orge-pkg-"));
+  // Extract next to the final folder: a rename only works within one filesystem,
+  // and the cache often lives on a mounted volume (e.g. /data) separate from /tmp.
+  await fs.mkdir(path.dirname(dir), { recursive: true });
+  const tmp = await fs.mkdtemp(path.join(path.dirname(dir), ".tmp-pkg-"));
   try {
     const tgz = path.join(tmp, "pkg.tgz");
     await fs.writeFile(tgz, buf);
@@ -226,7 +228,6 @@ async function downloadPackage(dist: { tarball: string; integrity?: string }, di
         return p.endsWith(".sol") || /^[^/]+\/package\.json$/.test(p);
       },
     });
-    await fs.mkdir(path.dirname(dir), { recursive: true });
     await fs.rm(dir, { recursive: true, force: true });
     await fs.rename(out, dir);
     await fs.writeFile(path.join(dir, ".complete"), new Date().toISOString());

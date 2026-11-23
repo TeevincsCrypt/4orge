@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { GitBranch, Mail } from "lucide-react";
 import { Logo } from "@/components/shell";
+import { APP_URL } from "@/lib/app-url";
 import { Button, Callout, Input, Label } from "@/components/ui";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -37,7 +38,7 @@ export default function LoginPage() {
   }
   const supabase = createBrowserClient(url, key);
   const next = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("next") ?? "/dashboard" : "/dashboard";
-  const origin = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || (typeof window !== "undefined" ? window.location.origin : "");
+  const origin = APP_URL || (typeof window !== "undefined" ? window.location.origin : "");
   const redirectTo = origin ? `${origin}/auth/callback?next=${encodeURIComponent(next)}` : undefined;
 
   return (

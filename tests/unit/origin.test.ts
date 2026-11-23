@@ -8,7 +8,7 @@ describe("public origin behind a proxy", () => {
     delete process.env.NEXT_PUBLIC_APP_URL;
   });
   it("prefers NEXT_PUBLIC_APP_URL over the internal request URL", () => {
-    process.env.NEXT_PUBLIC_APP_URL = "https://forge.up.railway.app/";
+    process.env.NEXT_PUBLIC_APP_URL = "forge.up.railway.app/";
     expect(publicUrl(req("http://localhost:8080/auth/callback"), "/dashboard").toString()).toBe("https://forge.up.railway.app/dashboard");
   });
   it("uses forwarded headers when no public URL is configured", () => {

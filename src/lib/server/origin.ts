@@ -1,4 +1,5 @@
 import "server-only";
+import { normalizeAppUrl } from "../app-url";
 
 /**
  * The public origin users reach this app at. Behind a hosting proxy
@@ -7,14 +8,8 @@ import "server-only";
  * Order: NEXT_PUBLIC_APP_URL → forwarded headers → Host header → request URL.
  */
 export function publicOrigin(req: Request): string {
-  const configured = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  if (configured) {
-    try {
-      return new URL(configured).origin;
-    } catch {
-      /* fall through to headers */
-    }
-  }
+  const configured = normalizeAppUrl(process.env.NEXT_PUBLIC_APP_URL);
+  if (configured) return configured;
   const fallback = new URL(req.url);
   const host = (req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? fallback.host).split(",")[0].trim();
   const proto = (req.headers.get("x-forwarded-proto") ?? fallback.protocol.replace(":", "")).split(",")[0].trim();

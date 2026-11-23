@@ -1,6 +1,7 @@
 import "server-only";
 import path from "node:path";
 import type { NetworkFlags } from "../networks";
+import { normalizeAppUrl } from "../app-url";
 
 /**
  * Parse a boolean environment flag. Tolerates the mistakes hosting dashboards
@@ -83,7 +84,7 @@ export function getConfig(): ServerConfig {
     remoteFlagRaw: process.env.FORGE_ALLOW_REMOTE_LOCAL_MODE ?? null,
     github: { clientId, clientSecret, configured: Boolean(clientId && clientSecret && sessionSecret) },
     sessionSecret,
-    appUrl: process.env.NEXT_PUBLIC_APP_URL || null,
+    appUrl: normalizeAppUrl(process.env.NEXT_PUBLIC_APP_URL),
   };
   return cached;
 }

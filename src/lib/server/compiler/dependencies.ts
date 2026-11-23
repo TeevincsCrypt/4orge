@@ -36,12 +36,14 @@ export interface ResolveResult {
 
 const MAX_SOURCES = 2000;
 
+const NON_DEPLOYABLE_DIRS = new Set(["test", "tests", "script", "scripts", "lib", "node_modules"]);
+
 /** Files that are compiled for deployment (tests and scripts are excluded). */
 export function isDeployableSource(p: string): boolean {
   if (!isSolidity(p) || isSolidityTest(p)) return false;
   if (p.endsWith(".s.sol")) return false;
-  const top = p.split("/")[0];
-  return !["test", "tests", "script", "scripts", "lib", "node_modules"].includes(top);
+  // Test, script and vendored folders at any depth (e.g. contracts/test/mocks/ in a monorepo).
+  return !p.split("/").slice(0, -1).some((dir) => NON_DEPLOYABLE_DIRS.has(dir));
 }
 
 function npmPackageName(importPath: string): { name: string; subpath: string } | null {

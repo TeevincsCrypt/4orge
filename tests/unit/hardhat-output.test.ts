@@ -52,3 +52,12 @@ describe("Hardhat output parser", () => {
     expect(r.tests[0].suite).toBe("A:T");
   });
 });
+
+describe("Hardhat failure summary", () => {
+  it("surfaces the first error line", async () => {
+    const { firstError } = await import("@/lib/server/testing/runner");
+    const out = "Compiling...\nRuntimeError: memory access out of bounds\n    at wasm://wasm\nError HHE908: A wasm version of solc failed to run.\n";
+    expect(firstError(out)).toBe(": RuntimeError: memory access out of bounds.");
+    expect(firstError("nothing useful")).toBe(".");
+  });
+});

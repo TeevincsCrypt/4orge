@@ -3,7 +3,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 
 export const DOCS = [
-  { slug: "next-steps", file: "docs/next-steps.md", title: "Next step: Testnet test", summary: "Claim test QIE from the faucet, then follow this checklist for the first real QIE Testnet deployment." },
+  { slug: "next-steps", file: "docs/next-steps.md", title: "Deployment checklist", summary: "Step by step: deploy to QIE Testnet or Mainnet, check the result and fix common problems." },
   { slug: "getting-started", file: "docs/getting-started.md", title: "Getting started", summary: "Install and run 4ORGE locally, then deploy your first contract to QIE Testnet." },
   { slug: "runbooks", file: "docs/runbooks.md", title: "Runbooks", summary: "The Runbook format, step allowlist, ordering rules and execution model." },
   { slug: "qie-networks", file: "docs/qie-networks.md", title: "QIE networks", summary: "Chain IDs, RPC endpoints, explorers, faucet and how 4ORGE validates them." },

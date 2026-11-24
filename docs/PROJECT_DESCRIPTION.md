@@ -59,7 +59,7 @@ The automated test suite includes a forged-hash attack, and 4ORGE rejects it.
 - The chain ID is verified live via `eth_chainId` before anything is prepared. Mismatching endpoints are refused.
 - Multiple QIE RPC endpoints are tried automatically, and each must prove the correct chain ID. The Network page shows the health and latency of every endpoint.
 - One-click "add / switch wallet to QIE Testnet" (EIP-3085 / EIP-3326), with detection of wallet/network mismatches.
-- Source verification is submitted to QIE's explorer if it supports the Blockscout verification API. If it doesn't, 4ORGE says *unsupported* rather than ever claiming a verification the explorer didn't confirm.
+- Source verification is submitted to QIE's explorer through its Blockscout verification API, and it works on QIE Mainnet. On an explorer without that API, 4ORGE says *unsupported* rather than ever claiming a verification the explorer didn't confirm.
 
 **Security by design**
 - **No keys, ever:** 4ORGE never asks for, stores or sees a seed phrase or private key. Wallets are discovered with EIP-6963, so MetaMask and Rabby can coexist.
@@ -102,8 +102,9 @@ The automated test suite includes a forged-hash attack, and 4ORGE rejects it.
 - ✅ Live on Railway with Supabase sign-in and private per-user workspaces.
 - ✅ The hosted server reaches QIE Testnet (chain 1983 verified live).
 - ✅ The complete deployment flow is proven end-to-end against a real EVM.
-- ⏳ **First real QIE Testnet deployment:** pending test QIE, because the QIE faucet was temporarily unavailable. Everything up to the wallet signature works on Testnet today.
-- ⏳ **Explorer verification on QIE:** runs automatically after that first deployment.
+- ✅ **First real deployment on QIE Mainnet:** AtlasGovernor, imported from a GitHub Foundry repository, compiled in 4ORGE (its 114 tests pass in 4ORGE's test runner), signed by the owner's wallet and validated on-chain. Contract [`0x8b9e799f6bb4b9b120de4293f8482c6112fac366`](https://mainnet.qie.digital/address/0x8b9e799f6bb4b9b120de4293f8482c6112fac366?tab=contract), transaction [`0xec7eca64…`](https://mainnet.qie.digital/tx/0xec7eca641f1ce2c3643952ac556eabb03a2e0c758d3b848fde09a6338c0faa55), block 12128375.
+- ✅ **Explorer verification on QIE:** the contract's source is verified on mainnet.qie.digital through its Blockscout API.
+- ⏳ **QIE Testnet deployment:** the same flow; it's waiting only on test QIE from the faucet.
 
 ## Who it's for
 - **Developers new to QIE** who want to ship a contract without assembling a toolchain.
@@ -111,8 +112,7 @@ The automated test suite includes a forged-hash attack, and 4ORGE rejects it.
 - **Hackathon builders and auditors** who need a trustworthy record of what was deployed, by whom, with which code and arguments.
 
 ## Roadmap
-- First QIE Testnet demo deployment and explorer verification.
-- Mainnet deployments behind an explicit, per-deployment owner authorization.
+- A QIE Testnet demo deployment, once test QIE is available.
 - Container-isolated test runners for large multi-tenant hosting.
 - A contract interaction console (read/write calls from the ABI).
 - Multi-contract Runbooks (deploy and wire several contracts, proxies, post-deploy calls).
@@ -120,7 +120,8 @@ The automated test suite includes a forged-hash attack, and 4ORGE rejects it.
 - Full Foundry compatibility (`foundry.toml` profiles, `lib/` submodules beyond forge-std) and library linking.
 
 ## Links
-- **Live app:** *(your Railway URL)*
-- **Source code:** https://github.com/TeevincsCrypt/4orge (branch `claude/keen-mccarthy-i36ir2`)
+- **Live app:** https://4orge-production.up.railway.app
+- **Source code:** https://github.com/TeevincsCrypt/4orge
+- **First QIE Mainnet deployment:** https://mainnet.qie.digital/address/0x8b9e799f6bb4b9b120de4293f8482c6112fac366?tab=contract
 - **Docs:** README, plus in-app **Documentation** (Getting started, Runbooks, QIE networks, Architecture & security, API, Deployment guide)
 - **License:** MIT

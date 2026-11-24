@@ -10,7 +10,23 @@ Built for **QIE Blockchain Hackathon 3.0 — Developer Infrastructure**.
 
 ![Execution of a deployment Runbook](docs/screenshots/execution-success.png)
 
-> **▶ Next step:** the first real QIE deployment. Use Testnet if the faucet works, otherwise the **Mainnet route** with a small amount of real QIE. Both are in the **[checklist](docs/next-steps.md)**. Everything else is deployed and working.
+> **✅ Live on QIE Mainnet:** AtlasGovernor was deployed through 4ORGE and is [source-verified on QIE's explorer](https://mainnet.qie.digital/address/0x8b9e799f6bb4b9b120de4293f8482c6112fac366?tab=contract). Details below.
+
+---
+
+## Live on QIE Mainnet
+
+The first real deployment made with 4ORGE: **AtlasGovernor** (from the imported [`atlaspad`](https://github.com/TeevincsCrypt/atlaspad) Foundry repository), deployed through a 4ORGE Runbook, signed by the owner's wallet, validated on-chain and **source-verified on QIE's explorer**.
+
+| | |
+|---|---|
+| Network | QIE Mainnet (chain 1990) |
+| Contract | [`0x8b9e799f6bb4b9b120de4293f8482c6112fac366`](https://mainnet.qie.digital/address/0x8b9e799f6bb4b9b120de4293f8482c6112fac366?tab=contract) |
+| Transaction | [`0xec7eca64…0faa55`](https://mainnet.qie.digital/tx/0xec7eca641f1ce2c3643952ac556eabb03a2e0c758d3b848fde09a6338c0faa55) |
+| Block | 12128375 |
+| Source verification | ✅ Verified on mainnet.qie.digital |
+
+![AtlasGovernor deployment record in 4ORGE](docs/screenshots/qie-mainnet-deployment.png)
 
 ---
 
@@ -126,7 +142,7 @@ See the [deployment guide](docs/deployment-guide.md) for hosting.
 
 ## Documentation
 
-- **[Next step: QIE Testnet test checklist](docs/next-steps.md)**
+- **[Deployment checklist (QIE Testnet and Mainnet)](docs/next-steps.md)**
 - [Getting started](docs/getting-started.md)
 - [Runbooks](docs/runbooks.md): the format, steps and execution model
 - [QIE networks](docs/qie-networks.md)
@@ -141,8 +157,8 @@ The same documents are available inside the app under **Documentation**.
 
 ## Current limitations (honest status)
 
-- **No real QIE Testnet deployment yet. It only needs test QIE.** The hosted app reaches QIE Testnet, and the full flow is proven end-to-end against a real local EVM (`npm run test:e2e`). The QIE faucet was temporarily unavailable, so the first real deployment is the next step: see the [Testnet test checklist](docs/next-steps.md).
-- **Explorer verification**: 4ORGE submits verification to explorers that expose the Blockscout API. Whether QIE's explorers expose it is detected at runtime. If they don't, the status is shown as *unsupported*, never as verified.
+- **QIE Mainnet: done.** The first real deployment ([AtlasGovernor](https://mainnet.qie.digital/address/0x8b9e799f6bb4b9b120de4293f8482c6112fac366?tab=contract)) went through the full flow on QIE Mainnet. A QIE **Testnet** deployment hasn't been done yet, because the faucet was unavailable; the flow is the same.
+- **Explorer verification** works on QIE Mainnet's explorer (Blockscout API): the AtlasGovernor deployment is verified. On any explorer without a compatible API, the status is shown as *unsupported*, never as verified.
 - **Supabase mode** runs in production on Railway with a hosted Supabase project (email sign-in, private per-user data). GitHub sign-in requires enabling the GitHub provider in Supabase (see the deployment guide).
 - Tests run with Hardhat 3. Foundry-style Solidity tests that use `forge-std` run too (4ORGE fetches forge-std 1.17.0 from its pinned GitHub release, because the npm copy is outdated). Tests that depend on Foundry-only features (`ffi`, forking via `foundry.toml` RPC aliases, `forge script`) may not, and Hardhat 2 / ethers-style JavaScript tests may need small updates.
 - Library linking (contracts with external libraries) and upgradeable-proxy deployments are not supported yet.
@@ -150,8 +166,7 @@ The same documents are available inside the app under **Documentation**.
 
 ## Roadmap
 
-- Testnet demo deployment and explorer verification confirmation on QIE.
-- Mainnet deployments behind an explicit, per-deployment owner authorization.
+- A QIE Testnet demo deployment, once test QIE is available.
 - Container-isolated test runners for multi-tenant hosting.
 - Contract interaction console (read/write calls from the ABI).
 - Multi-contract Runbooks (deploy and wire several contracts, proxies, post-deploy calls).

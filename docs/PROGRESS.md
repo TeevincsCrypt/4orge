@@ -59,9 +59,36 @@ Bugs found and fixed during QA:
 | Supabase email sign-in and per-user data (after the permissions step) | ✅ |
 | QIE Testnet reachable from the hosted server, after the RPC fallback fix | ✅ reported by owner |
 
-### Next step
+### Next step (superseded: see Session 3)
 **Claim test QIE from the faucet, then run the [QIE Testnet test checklist](next-steps.md).** It covers:
 1. The first QIE Testnet deployment with a real wallet. This was blocked only by the faucet being unavailable.
 2. Explorer verification on QIE, which runs automatically after that deployment.
 
 Optional: GitHub sign-in (enable the provider in Supabase) and private repository import (separate GitHub OAuth app).
+
+## Session 3 — 2026-11-23 to 2026-11-24
+
+### Milestone: first real QIE Mainnet deployment ✅
+**AtlasGovernor**, from the owner's `atlaspad` Foundry monorepo, was imported from GitHub, compiled in 4ORGE (its 114 tests pass in 4ORGE's test runner), then deployed to **QIE Mainnet** through a Runbook. That included the review step, the typed MAINNET confirmation, a wallet signature and on-chain receipt validation.
+
+| | |
+|---|---|
+| Contract | [`0x8b9e799f6bb4b9b120de4293f8482c6112fac366`](https://mainnet.qie.digital/address/0x8b9e799f6bb4b9b120de4293f8482c6112fac366?tab=contract) |
+| Transaction | [`0xec7eca641f1ce2c3643952ac556eabb03a2e0c758d3b848fde09a6338c0faa55`](https://mainnet.qie.digital/tx/0xec7eca641f1ce2c3643952ac556eabb03a2e0c758d3b848fde09a6338c0faa55) |
+| Block | 12128375 |
+| Source verification | ✅ Verified on mainnet.qie.digital (Blockscout API) |
+
+Reported by the owner with a screenshot (`docs/screenshots/qie-mainnet-deployment.png`) and explorer links. QIE hosts are blocked from the development container, so it was not re-checked from there.
+
+### Fixed while importing a real repository
+- **Large repositories:** GitHub imports are streamed and only project files are kept (it used to refuse archives over 100 MB).
+- **Railway volumes:** compiler and package downloads are unpacked on the cache's own disk, which fixes `EXDEV: cross-device link not permitted`.
+- **forge-std:** fetched from its pinned GitHub release (1.17.0) and hash-checked. npm only has 1.1.2 from 2022.
+- **Compiler crash:** large test builds crashed the wasm compiler with "memory access out of bounds". The input is now passed on the heap, both in 4ORGE's compile step and in Hardhat.
+- **Monorepos:** a config in a subfolder (`contracts/foundry.toml`) is used when the root has none. Before, atlaspad compiled with the optimizer off.
+- **Error messages:** Hardhat failures now name their first error line.
+
+### Next
+- QIE Testnet demo deployment, when the faucet works.
+- Hackathon submission: repository public, demo walkthrough, X thread (`media/thread/`).
+

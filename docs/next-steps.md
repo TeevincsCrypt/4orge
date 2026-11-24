@@ -1,10 +1,12 @@
-# Next step: first real QIE deployment
+# Deployment checklist: QIE Testnet and Mainnet
+
+> **✅ Done on QIE Mainnet.** The first real deployment, AtlasGovernor, is live and [source-verified on mainnet.qie.digital](https://mainnet.qie.digital/address/0x8b9e799f6bb4b9b120de4293f8482c6112fac366?tab=contract). Route A (Testnet) is still open, for when the faucet works again. This checklist stays as the step-by-step guide for any deployment.
 
 > **Faucet down? Use the Mainnet route below.** It's the same flow on QIE Mainnet, with real (small) QIE and extra safeguards.
 
 # Route A — QIE Testnet
 
-**Status:** 4ORGE is deployed on Railway with Supabase sign-in, and its server can reach QIE Testnet. Everything is ready for the first real deployment.
+**Status:** 4ORGE is deployed on Railway with Supabase sign-in, and its server can reach QIE Testnet. A Testnet deployment only needs test QIE.
 
 **The only thing missing is test QIE in your wallet.** Claim it from the faucet, then follow this checklist on your hosted site.
 
@@ -85,7 +87,7 @@ Mainnet deployments spend **real QIE**, and contracts are **permanent and public
 | Check network fails | Open **Network** → **Check** and send Claude the per-endpoint list (✓/✗ with reasons). |
 | Deployment reverts with "invalid opcode" | Project → **Settings** → **EVM version** = `paris` → Save, then start the deployment again. |
 | "Not confirmed within 300 s" | The transaction may still be mined. Click **Retry** on that step; it keeps waiting and never sends a second transaction. |
-| Verification says *unsupported* | That's fine: QIE's explorer doesn't offer automatic verification. Just tell Claude. |
+| Verification says *unsupported* or *failed* | The contract is still deployed. QIE Mainnet's explorer supports verification, so send Claude the message. |
 
 ## Optional, any time
 - **GitHub sign-in:** enable the GitHub provider in Supabase (see the deployment guide), then try **Continue with GitHub**.

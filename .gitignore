@@ -54,3 +54,4 @@ next-env.d.ts
 # promo video build output
 /media/promo/assets/
 /media/promo/out/
+media/thread/out/

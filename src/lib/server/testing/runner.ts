@@ -8,7 +8,7 @@ import { getConfig } from "../config";
 import { runNode } from "../sandbox";
 import { cachedPackageDir, resolveSources, type SourceFile } from "../compiler/dependencies";
 import { availableCompilerVersions, chooseVersion, ensureCompiler } from "../compiler/solc-versions";
-import { parsePragmas } from "@/lib/project/detect";
+import { detectFsPermissions, parsePragmas } from "@/lib/project/detect";
 
 export interface TestOutcome {
   status: TestRunStatus;
@@ -139,6 +139,9 @@ export async function runProjectTests(
       await fs.writeFile(dest, f.content, "utf8");
     }
 
+    // Files the project's Foundry config lets tests read or write (fs_permissions).
+    const fsPermissions = await applyFsPermissions(dir, files);
+
     // Remappings as detected (rebased to the root, unavailable lib/ targets dropped).
     if (opts.remappings.length) await fs.writeFile(path.join(dir, "remappings.txt"), `${opts.remappings.join("\n")}\n`);
 
@@ -203,7 +206,8 @@ export default defineConfig({
   paths: {
     sources: ${JSON.stringify(sourceDirs.length ? sourceDirs : ["contracts"])},
     tests: { solidity: "test", nodejs: "test" },
-  },
+  },${fsPermissions ? `
+  test: { solidity: { fsPermissions: ${JSON.stringify(fsPermissions)} } },` : ""}
 });
 `;
     await fs.writeFile(path.join(dir, "hardhat.config.ts"), config);
@@ -260,6 +264,53 @@ export default defineConfig({
   } finally {
     await fs.rm(dir, { recursive: true, force: true }).catch(() => undefined);
   }
+}
+
+type HardhatFsPermissions = Partial<Record<"readFile" | "readDirectory" | "readWriteFile" | "writeFile" | "dangerouslyReadWriteDirectory" | "dangerouslyWriteDirectory", string[]>>;
+
+/**
+ * Honour the project's Foundry `fs_permissions` inside the sandbox, so tests
+ * that call vm.readFile / vm.writeJson work as they do under Foundry:
+ *  - project files under a permitted path are copied into the sandbox
+ *    (only files 4ORGE stores for the project, never anything from the host);
+ *  - each path becomes the matching Hardhat permission, as an absolute path
+ *    inside the sandbox;
+ *  - write access is only granted to subfolders of the project. The sandbox
+ *    root and node_modules hold symlinks into the shared compiler/package
+ *    cache, which a test must never be able to write through.
+ * Returns null when the project grants no file access.
+ */
+export async function applyFsPermissions(dir: string, files: SourceFile[]): Promise<HardhatFsPermissions | null> {
+  const perms = detectFsPermissions(files);
+  if (!perms.length) return null;
+  const out: HardhatFsPermissions = {};
+  const add = (key: keyof HardhatFsPermissions, p: string) => (out[key] ??= []).push(p);
+  const written = new Set<string>();
+  for (const perm of perms) {
+    const under = (f: string) => !perm.path || f === perm.path || f.startsWith(`${perm.path}/`);
+    const isFile = Boolean(perm.path) && files.some((f) => f.path === perm.path);
+    for (const f of files) {
+      if (!under(f.path) || written.has(f.path) || isSolidity(f.path)) continue;
+      const dest = path.resolve(dir, f.path);
+      if (!dest.startsWith(dir + path.sep)) continue;
+      await fs.mkdir(path.dirname(dest), { recursive: true });
+      await fs.writeFile(dest, f.content, "utf8");
+      written.add(f.path);
+    }
+    const abs = perm.path ? path.resolve(dir, perm.path) : dir;
+    if (abs !== dir && !abs.startsWith(dir + path.sep)) continue;
+    const top = perm.path.split("/")[0];
+    const writable = perm.access !== "read" && perm.path !== "" && !["node_modules", "lib", ".forge-solc", ".home"].includes(top);
+    if (isFile) {
+      if (perm.access === "read" || !writable) add("readFile", abs);
+      else add(perm.access === "write" ? "writeFile" : "readWriteFile", abs);
+    } else {
+      if (writable) await fs.mkdir(abs, { recursive: true });
+      if (perm.access === "read" || !writable) add("readDirectory", abs);
+      else add(perm.access === "write" ? "dangerouslyWriteDirectory" : "dangerouslyReadWriteDirectory", abs);
+    }
+  }
+  return Object.keys(out).length ? out : null;
 }
 
 /** The first error line in Hardhat's output, e.g. ": Error HH1006: …", so the reason shows without opening the log. */

@@ -72,4 +72,42 @@ describe("forge-std (Foundry test library)", () => {
     expect(run.status).toBe("passed");
     expect(run.passed).toBe(1);
   });
+
+  it("lets tests read files permitted by foundry.toml fs_permissions (vm.readFile)", async () => {
+    const project = [
+      {
+        path: "foundry.toml",
+        content: `[profile.default]\nsolc_version = "0.8.28"\nfs_permissions = [\n  { access = "read", path = "./config" },\n  { access = "read-write", path = "./deployments" },\n]\n`,
+      },
+      { path: "config/addresses.json", content: '{"token":"0x00000000000000000000000000000000000000aa"}' },
+      {
+        path: "test/Config.t.sol",
+        content: `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+import {Test} from "forge-std/Test.sol";
+contract ConfigTest is Test {
+    address token;
+    function setUp() public {
+        string memory cfg = vm.readFile(string.concat(vm.projectRoot(), "/config/addresses.json"));
+        token = vm.parseJsonAddress(cfg, ".token");
+    }
+    function test_ReadsConfig() public view {
+        assertEq(token, address(0xaa));
+    }
+    function test_WritesDeployments() public {
+        vm.writeFile(string.concat(vm.projectRoot(), "/deployments/out.txt"), "ok");
+        assertEq(vm.readFile(string.concat(vm.projectRoot(), "/deployments/out.txt")), "ok");
+    }
+}
+`,
+      },
+      { path: "src/Dummy.sol", content: "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.24;\ncontract Dummy {}\n" },
+    ];
+    const { detection, compiler } = detectProject(project);
+    const run = await runProjectTests(project, { settings: compiler, remappings: detection.remappings, dependencies: detection.dependencies, scope: "solidity" });
+    expect(run.errorMessage).toBeNull();
+    expect(run.status).toBe("passed");
+    expect(run.passed).toBe(2);
+  });
 });
+

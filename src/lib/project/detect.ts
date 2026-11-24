@@ -4,7 +4,7 @@
  * user's hardhat.config would execute arbitrary code on the 4ORGE server.
  */
 import type { CompilerSettings, DetectedContract, Framework, ProjectDetection } from "../types";
-import { isNodeTestFile, isSolidity, isSolidityTest } from "./paths";
+import { isNodeTestFile, isSolidity, isSolidityTest, normalizeProjectPath } from "./paths";
 
 export interface FileLike {
   path: string;
@@ -148,6 +148,49 @@ function findConfig(files: FileLike[]): { path: string; kind: "hardhat" | "found
     .filter((c): c is { path: string; kind: "hardhat" | "foundry"; depth: number } => c.kind !== null && c.depth <= 2)
     .sort((a, b) => a.depth - b.depth || (a.kind === b.kind ? a.path.localeCompare(b.path) : a.kind === "hardhat" ? -1 : 1));
   return candidates[0] ?? null;
+}
+
+export type FsAccess = "read" | "write" | "read-write";
+
+/** Foundry `fs_permissions` entries (`{ access = "read", path = "./config" }`), read as text. */
+export function parseFsPermissions(toml: string): { access: FsAccess; path: string }[] {
+  const block = toml.match(/^\s*fs_permissions\s*=\s*\[([\s\S]*?)\]\s*$/m)?.[1];
+  if (!block) return [];
+  const out: { access: FsAccess; path: string }[] = [];
+  for (const entry of block.match(/\{[^}]*\}/g) ?? []) {
+    const access = entry.match(/access\s*=\s*(?:"([^"]+)"|(true|false))/);
+    const path = entry.match(/path\s*=\s*"([^"]+)"/)?.[1];
+    if (!access || !path) continue;
+    // Older Foundry versions used booleans: true = read-write, false = read.
+    const a = access[2] ? (access[2] === "true" ? "read-write" : "read") : access[1];
+    if (a === "read" || a === "write" || a === "read-write") out.push({ access: a, path });
+  }
+  return out;
+}
+
+/**
+ * File access that the project's Foundry config grants to Solidity tests
+ * (`vm.readFile`, `vm.writeJson`, …), with paths made relative to the
+ * repository root. Paths that are absolute or leave the project are dropped;
+ * an empty path means the project root.
+ */
+export function detectFsPermissions(files: FileLike[]): { access: FsAccess; path: string }[] {
+  const config = findConfig(files);
+  if (config?.kind !== "foundry") return [];
+  const base = config.path.slice(0, config.path.lastIndexOf("/") + 1);
+  const toml = files.find((f) => f.path === config.path)?.content ?? "";
+  const out: { access: FsAccess; path: string }[] = [];
+  for (const perm of parseFsPermissions(toml)) {
+    const joined = `${base}${perm.path}`;
+    if (/^\.\/?$/.test(perm.path) || joined.replace(/\/+$/, "") === base.replace(/\/+$/, "")) {
+      out.push({ access: perm.access, path: base.replace(/\/+$/, "") });
+      continue;
+    }
+    if (perm.path.startsWith("/") || /^[a-zA-Z]:/.test(perm.path)) continue;
+    const norm = normalizeProjectPath(joined);
+    if (norm.ok) out.push({ access: perm.access, path: norm.path });
+  }
+  return out;
 }
 
 /** Make a remapping written relative to `base` (e.g. "contracts/") relative to the repository root. */

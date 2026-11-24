@@ -62,3 +62,21 @@ describe("project detection (static, never executes config)", () => {
     expect(detection.remappings).toEqual(["@oz/=node_modules/@openzeppelin/contracts/"]);
   });
 });
+
+describe("Foundry fs_permissions", () => {
+  it("parses entries, rebases them to the root and drops paths outside the project", async () => {
+    const { detectFsPermissions } = await import("@/lib/project/detect");
+    const perms = detectFsPermissions([
+      {
+        path: "contracts/foundry.toml",
+        content: `[profile.default]\nfs_permissions = [\n  { access = "read", path = "./config" },\n  { path = "./deployments", access = "read-write" },\n  { access = "read", path = "../secrets" },\n  { access = "read", path = "/etc" },\n  { access = true, path = "./out" },\n]\n`,
+      },
+      { path: "contracts/src/A.sol", content: "pragma solidity ^0.8.20; contract A {}" },
+    ]);
+    expect(perms).toEqual([
+      { access: "read", path: "contracts/config" },
+      { access: "read-write", path: "contracts/deployments" },
+      { access: "read-write", path: "contracts/out" },
+    ]);
+  });
+});

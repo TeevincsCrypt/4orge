@@ -1,0 +1,440 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<!-- 4ORGE "we've gone mainnet" video. Light scenes only. render(t) draws the exact frame for time t. -->
+<style>
+@font-face{font-family:G;src:url(assets/Geist-Regular.woff2);font-weight:400}
+@font-face{font-family:G;src:url(assets/Geist-Medium.woff2);font-weight:500}
+@font-face{font-family:G;src:url(assets/Geist-SemiBold.woff2);font-weight:600}
+@font-face{font-family:G;src:url(assets/Geist-Bold.woff2);font-weight:700}
+@font-face{font-family:G;src:url(assets/Geist-Black.woff2);font-weight:900}
+@font-face{font-family:M;src:url(assets/GeistMono-Medium.woff2);font-weight:500}
+:root{--blue:#3d89e9;--blue2:#2a6fcc;--ink:#16161d;--paper:#f3f3f9;--ok:#1f9d63;--muted:#6c6c80}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1920px;height:1080px;overflow:hidden;background:var(--paper)}
+body{font-family:G,sans-serif;-webkit-font-smoothing:antialiased;color:var(--ink)}
+.serif{font-family:"Bitstream Charter",Charter,"Caladea",serif;font-style:italic;font-weight:400;letter-spacing:-0.01em}
+.mono{font-family:M,monospace}
+#stage{position:absolute;inset:0;overflow:hidden;background:var(--paper)}
+#tint{position:absolute;inset:0;pointer-events:none}
+.layer{position:absolute;inset:0}
+.scene{position:absolute;inset:0;display:none;overflow:hidden}
+.abs{position:absolute}
+.center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:max-content}
+.leak{position:absolute;border-radius:50%;pointer-events:none}
+#dots{position:absolute;inset:0;background-image:radial-gradient(rgba(22,22,29,.16) 1.4px,transparent 1.6px);background-size:34px 34px;pointer-events:none}
+#grain{position:absolute;inset:0;mix-blend-mode:multiply;opacity:.08;pointer-events:none}
+#flash{position:absolute;inset:0;background:var(--blue);opacity:0;pointer-events:none}
+.card{position:absolute;border-radius:20px;padding:22px 28px;font-size:28px;background:#fff;border:1px solid #e3e3ee;box-shadow:0 30px 60px -22px rgba(40,50,110,.35)}
+.card .lbl{font-size:18px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.card.okc{background:#eef9f2;border-color:#bfe6cf;color:var(--ok)}
+.card.bluec{background:#e8f1fd;border-color:#bcd5f6;color:var(--blue2)}
+.chip{position:absolute;display:inline-flex;align-items:center;gap:12px;border-radius:999px;padding:12px 22px;font-size:26px;font-weight:500;white-space:nowrap;background:#fff;color:var(--ink);border:1px solid #e3e3ee;box-shadow:0 12px 30px -14px rgba(30,40,90,.35)}
+.okt{color:var(--ok)}
+.tile{background:#fff;border-radius:44px;display:flex;align-items:center;justify-content:center}
+.gridline{position:absolute;background:rgba(22,22,29,.10)}
+.cell{position:absolute;overflow:hidden;border-radius:16px;background:#fff;border:1px solid #e3e3ee}
+.cell img{position:absolute;left:0;top:0;height:auto;transform-origin:0 0}
+.blob{position:absolute;border-radius:50%}
+.plus{position:absolute;width:90px;height:90px}
+.plus:before,.plus:after{content:"";position:absolute;background:linear-gradient(135deg,#7fb6ff,#2f6fe0);border-radius:10px}
+.plus:before{left:32px;top:0;width:26px;height:90px}.plus:after{top:32px;left:0;height:26px;width:90px}
+.step{position:absolute;background:#fff;color:var(--ink);border-radius:20px;padding:20px 26px;display:flex;align-items:center;gap:16px;font-size:28px;font-weight:500;box-shadow:0 30px 60px -24px rgba(40,40,90,.45);white-space:nowrap;border:1px solid #e9e9f2}
+.pill{font-size:18px;border-radius:999px;padding:5px 14px;font-weight:600}
+.check{width:34px;height:34px;border-radius:50%;border:3px solid var(--ok);display:inline-flex;align-items:center;justify-content:center;color:var(--ok);font-size:20px;font-weight:800;flex:none}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="layer" id="leaks"></div>
+  <div id="tint"></div>
+  <div id="dots"></div>
+  <div id="scenes"></div>
+  <canvas id="grain" width="480" height="270"></canvas>
+  <div id="flash"></div>
+</div>
+<script>
+const BPM = 128, B = 60 / BPM, S = (b) => b * B;
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const eo = (t) => 1 - Math.pow(1 - t, 3);
+const eoe = (t) => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t));
+const eib = (t) => { const c = 1.7; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); };
+const prog = (t, b0, b1) => clamp((t - S(b0)) / (S(b1) - S(b0)));
+function rnd(seed) { let a = seed >>> 0; return () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const hash = (n) => rnd(n * 9973 + 17)();
+const $ = (h) => { const d = document.createElement("div"); d.innerHTML = h.trim(); return d.firstElementChild; };
+const scenesEl = document.getElementById("scenes");
+const MARK = (size, id) => `<svg viewBox="100 334 632 574" width="${size}" height="${size * 574 / 632}"><defs><linearGradient id="g${id}" x1="0" y1="0" x2="0.35" y2="1"><stop offset="0" stop-color="#7b7d83"/><stop offset=".45" stop-color="#55585f"/><stop offset="1" stop-color="#383b44"/></linearGradient></defs><path fill="url(#g${id})" stroke="#2e3036" stroke-width="3" fill-rule="evenodd" d="M408 338 L408 852 L359 905 L358 702 L103 702 Z M358 478 L358 645 L215 645 Z"/><path fill="#3d89e9" d="M452 408 L728 408 L690 461 L502 461 L502 550 L452 600 Z"/><path fill="#3d89e9" d="M452 647 L507 592 L609 592 L632 548 L688 548 L639 646 L502 646 L502 755 L409 855 L409 778 L452 735 Z"/></svg>`;
+// RGB split that reads on light backgrounds (pink + cyan ghosts).
+const rgb = (px, a = .75) => px ? `${px}px 0 rgba(255,60,120,${a}), ${-px}px 0 rgba(30,190,255,${a})` : "none";
+
+// Real deployment data (QIE Mainnet).
+const ADDR = "0x8b9e799f6bb4b9b120de4293f8482c6112fac366";
+const TX = "0xec7eca641f1ce2c3643952ac556eabb03a2e0c758d3b848fde09a6338c0faa55";
+
+// ------------------------------------------------------------------ global FX (all light)
+const leaks = document.getElementById("leaks");
+const LEAKS = [0, 1, 2, 3].map(() => { const d = $(`<div class="leak"></div>`); leaks.appendChild(d); return d; });
+const PASTEL = ["251,214,228", "205,224,252", "226,216,248", "200,236,222"];
+function setLeaks(t, intensity) {
+  LEAKS.forEach((d, i) => {
+    const r = 700 + 300 * Math.sin(t * 0.7 + i);
+    const x = 960 + 700 * Math.sin(t * (0.35 + i * 0.13) + i * 2) - r;
+    const y = 540 + 420 * Math.cos(t * (0.29 + i * 0.11) + i) - r;
+    d.style.cssText = `width:${r * 2}px;height:${r * 2}px;left:${x}px;top:${y}px;background:radial-gradient(circle, rgba(${PASTEL[i]},${0.95 * intensity}) 0%, rgba(${PASTEL[i]},${0.4 * intensity}) 38%, transparent 68%)`;
+  });
+}
+const grain = document.getElementById("grain"), gctx = grain.getContext("2d");
+function drawGrain(frame, amount) {
+  const img = gctx.createImageData(480, 270), r = rnd(frame + 1);
+  for (let i = 0; i < img.data.length; i += 4) { const v = 150 + r() * 105; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255; }
+  gctx.putImageData(img, 0, 0); grain.style.opacity = amount;
+}
+
+const SCENES = [];
+function scene(b0, b1, build, update) { const el = $(`<div class="scene"></div>`); scenesEl.appendChild(el); const ctx = build(el) || {}; SCENES.push({ b0, b1, el, ctx, update }); }
+
+// A — "No more testnet. No more mockups." → MAINNET. glitch slam (0-8)
+scene(0, 8, (el) => {
+  const words = [["No", 0], ["more", 1], ["testnet.", 1.5], ["No", 2], ["more", 3], ["mockups.", 3.5]];
+  const line = $(`<div class="center" style="top:46%;font-size:124px;font-weight:600;letter-spacing:-0.045em;white-space:nowrap;text-align:center;line-height:1.12"></div>`);
+  const spans = words.map(([w, b], i) => { if (i === 3) line.appendChild(document.createElement("br")); const s = $(`<span style="display:inline-block;margin:0 16px${/\./.test(w) ? ";color:#3d89e9" : ""}">${w}</span>`); line.appendChild(s); return [s, b]; });
+  el.appendChild(line);
+  const strike = $(`<div class="abs" style="height:14px;background:#ff3c78;border-radius:8px;left:0;top:0;transform-origin:0 50%"></div>`);
+  el.appendChild(strike);
+  const slices = [];
+  for (let i = 0; i < 7; i++) {
+    const c = $(`<div class="center" style="font-size:330px;font-weight:900;letter-spacing:-0.06em;line-height:1;white-space:nowrap;color:#16161d">MAINNET.</div>`);
+    if (i) c.style.clipPath = `inset(${(i - 1) * 16.6}% 0 ${100 - i * 16.6}% 0)`;
+    el.appendChild(c); slices.push(c);
+  }
+  return { line, spans, strike, slices };
+}, (t, ctx, f) => {
+  ctx.line.style.display = t < S(5) ? "block" : "none";
+  ctx.spans.forEach(([s, b]) => {
+    const p = prog(t, b, b + 0.5);
+    s.style.opacity = p > 0 ? 1 : 0;
+    s.style.filter = `blur(${(1 - eoe(p)) * 20}px)`;
+    s.style.transform = `translateY(${(1 - eoe(p)) * 60}px) scale(${1 + (1 - eoe(p)) * 0.4})`;
+    s.style.textShadow = rgb(p < 0.35 && p > 0 ? 10 * (1 - p / 0.35) : 0);
+  });
+  // a pink strike-through slashes across both lines at beat 4
+  const sp = prog(t, 4, 4.5);
+  ctx.strike.style.display = t >= S(4) && t < S(5) ? "block" : "none";
+  ctx.strike.style.width = "1300px";
+  ctx.strike.style.transform = `translate(310px, 520px) rotate(-8deg) scaleX(${eoe(sp)})`;
+  const cp = prog(t, 5, 5.5);
+  ctx.slices.forEach((c, i) => {
+    c.style.display = t >= S(5) ? "block" : "none";
+    const jit = t < S(7.5) ? (i ? (hash(f * 7 + i) - 0.5) * 90 * (hash(f + i * 31) > 0.45 ? 1 : 0.15) : 0) : 0;
+    const zoom = 1.6 - 0.6 * eoe(cp) + prog(t, 5.5, 8) * 0.2 + Math.pow(prog(t, 7.2, 8), 3) * 6;
+    c.style.transform = `translate(calc(-50% + ${jit}px), -50%) scale(${zoom}) skewX(${(hash(f + 3) - 0.5) * 14 * (1 - cp)}deg)`;
+    c.style.textShadow = i === 0 ? rgb(12 + 16 * hash(f)) : "none";
+    // Zooming through the letters: turn brand blue and dissolve, so the screen never goes dark.
+    const thru = prog(t, 7.1, 8);
+    c.style.color = thru > 0 ? "#3d89e9" : i && hash(f * 3 + i) > 0.8 ? "#3d89e9" : "#16161d";
+    c.style.opacity = 1 - Math.pow(thru, 0.8);
+    c.style.filter = `blur(${(1 - cp) * 30 + Math.pow(thru, 2) * 40}px)`;
+  });
+});
+
+// B — montage of the real deployment, then "We went mainnet." (8-16)
+const CARDS = [
+  ["", `<div class="lbl">Network</div>QIE Mainnet · <span class="mono">chain 1990</span>`],
+  ["okc", `<b>✓ Chain ID 1990 verified</b>`],
+  ["", `<div class="lbl">Contract</div><span class="mono" style="font-size:26px">AtlasGovernor.sol</span>`],
+  ["bluec", `<div class="lbl" style="color:#2a6fcc">Type to confirm</div><span class="mono" style="font-size:34px;letter-spacing:.08em">MAINNET▌</span>`],
+  ["okc", `<b>✓ 114 tests passed</b>`],
+  ["", `<div class="lbl">Wallet</div>Sign &amp; deploy ✍️`],
+  ["", `<div class="lbl">Transaction</div><span class="mono" style="font-size:26px">${TX.slice(0, 12)}…${TX.slice(-6)}</span>`],
+  ["okc", `<b>✓ Receipt validated on-chain</b>`],
+  ["", `<div class="lbl">Block</div><span class="mono" style="font-size:34px">12128375</span>`],
+  ["", `<div class="lbl">Address</div><span class="mono" style="font-size:26px">${ADDR.slice(0, 10)}…${ADDR.slice(-6)}</span>`],
+  ["okc", `<b>✓ Source verified</b><br><span style="font-size:22px;color:#4b8f6a">mainnet.qie.digital</span>`],
+  ["bluec", `<b>Status: Confirmed</b>`],
+];
+const BIGWORDS = ["1990", "SIGN", "GAS", "TX", "BLOCK", "0x8b9e", "VERIFY", "LIVE", "QIE", "REAL", "SHIP", "GO"];
+const STROBE = ["#fde6ef", "#e3eefd", "#ece6fb", "#e2f6ec"];
+scene(8, 16, (el) => {
+  const bg = $(`<div class="layer"></div>`); el.appendChild(bg);
+  const big = $(`<div class="center" style="font-size:500px;font-weight:900;letter-spacing:-0.06em;color:transparent;white-space:nowrap"></div>`);
+  el.appendChild(big);
+  const cards = CARDS.map(([kind, html], i) => {
+    const r = rnd(200 + i);
+    const c = $(`<div class="card ${kind}">${html}</div>`);
+    c.dataset.x = 60 + r() * 1180; c.dataset.y = 40 + r() * 760; c.dataset.rot = (r() - 0.5) * 22;
+    el.appendChild(c); return c;
+  });
+  const white = $(`<div class="layer" style="background:#fff"></div>`);
+  const line = $(`<div class="center" style="font-size:160px;font-weight:600;letter-spacing:-0.05em;color:#16161d;white-space:nowrap"><span style="margin-right:.22em">We</span><span style="margin-right:.22em">went</span><span class="serif" style="color:#3d89e9;font-size:184px">mainnet.</span></div>`);
+  white.appendChild(line); el.appendChild(white);
+  return { bg, big, cards, white, line, parts: [...line.children] };
+}, (t, ctx, f) => {
+  const q = Math.floor((t - S(8)) / S(0.25));
+  ctx.bg.style.background = STROBE[q % 4];
+  const k = Math.floor((t - S(8)) / S(0.5));
+  ctx.big.textContent = BIGWORDS[clamp(k, 0, 11)];
+  ctx.big.style.transform = `translate(-50%,-50%) scale(${1.15 - 0.15 * eoe(((t - S(8)) % S(0.5)) / S(0.5))}) rotate(${(hash(k) - 0.5) * 8}deg)`;
+  ctx.big.style.webkitTextStroke = `4px ${k % 2 ? "rgba(61,137,233,.55)" : "rgba(255,60,120,.4)"}`;
+  ctx.cards.forEach((c, i) => {
+    const b = 8 + i * 0.5, p = prog(t, b, b + 0.35);
+    const vis = t >= S(b) && t < S(14);
+    c.style.display = vis ? "block" : "none";
+    const sc = 1.5 - 0.5 * eib(p);
+    c.style.transform = `translate(${+c.dataset.x + (hash(f * 13 + i) - 0.5) * 22}px, ${+c.dataset.y + (hash(f * 17 + i) - 0.5) * 22}px) rotate(${+c.dataset.rot + (hash(f * 19 + i) - 0.5) * 3}deg) scale(${sc * 1.4})`;
+    c.style.filter = `blur(${(1 - p) * 14}px)`;
+  });
+  const w = t >= S(14);
+  ctx.white.style.display = w ? "block" : "none";
+  [[0, 14], [1, 14.5], [2, 15]].forEach(([i, b]) => {
+    const p = prog(t, b, b + 0.4), s = ctx.parts[i];
+    s.style.opacity = p > 0 ? 1 : 0; s.style.display = "inline-block";
+    s.style.filter = `blur(${(1 - eoe(p)) * 18}px)`;
+    s.style.transform = `translateY(${(1 - eoe(p)) * 40}px)`;
+  });
+  ctx.line.style.transform = `translate(-50%,-50%) scale(${1 + Math.pow(prog(t, 15, 16), 3) * 0.6})`;
+});
+
+// C — DROP: logo slam on white, blue shockwave + confetti, wordmark, "Live on QIE Mainnet." (16-24)
+scene(16, 24, (el) => {
+  const tile = $(`<div class="tile center" style="width:300px;height:300px;border:1px solid #e3e3ee;box-shadow:0 0 0 18px rgba(61,137,233,.12),0 40px 90px -20px rgba(40,60,140,.45)">${MARK(210, "a")}</div>`);
+  const ring = $(`<div class="center" style="width:300px;height:300px;border-radius:50%;border:8px solid rgba(61,137,233,.85)"></div>`);
+  const ring2 = $(`<div class="center" style="width:300px;height:300px;border-radius:50%;border:4px solid rgba(255,60,120,.6)"></div>`);
+  el.append(ring, ring2);
+  const COLORS = ["#3d89e9", "#7fb6ff", "#ff6b9a", "#ffd166", "#33c27f", "#b69cff"];
+  const parts = [];
+  for (let i = 0; i < 70; i++) { const r = rnd(500 + i); const s = 8 + r() * 22; const p = $(`<div class="abs" style="width:${s}px;height:${s * (r() > .5 ? 1 : .45)}px;border-radius:${r() > .6 ? "50%" : "3px"};background:${COLORS[Math.floor(r() * COLORS.length)]}"></div>`); p.dataset.a = r() * Math.PI * 2; p.dataset.v = 500 + r() * 1200; el.appendChild(p); parts.push(p); }
+  el.appendChild(tile);
+  const word = $(`<div class="abs" style="left:0;top:0;font-size:150px;font-weight:700;letter-spacing:0.04em;white-space:nowrap"></div>`);
+  const letters = ["4", "O", "R", "G", "E"].map((ch, i) => { const s = $(`<span style="display:inline-block;color:${i ? "#3d89e9" : "#2b2d33"}">${ch}</span>`); word.appendChild(s); return s; });
+  el.appendChild(word);
+  const tag = $(`<div class="abs" style="left:0;right:0;top:770px;text-align:center;font-size:78px;font-weight:600;letter-spacing:-0.03em;white-space:nowrap"></div>`);
+  const tw = [["Live", 20], ["on", 21], ["QIE", 22], ["Mainnet.", 23]].map(([w, b], i) => { const s = $(`<span class="${i === 3 ? "serif" : ""}" style="display:inline-block;margin:0 16px;${i === 3 ? "color:#3d89e9;font-size:94px" : ""}">${w}</span>`); s.dataset.b = b; tag.appendChild(s); return s; });
+  el.appendChild(tag);
+  return { tile, ring, ring2, parts, word, letters, tw };
+}, (t, ctx, f) => {
+  const p = prog(t, 16, 16.6), assemble = prog(t, 18, 19.2);
+  const tx = lerp(0, -330, eo(assemble)), ty = lerp(0, -80, eo(assemble));
+  const sc = (t < S(16) ? 0 : 3.2 - 2.2 * eib(p)) * lerp(1, 0.72, eo(assemble));
+  ctx.tile.style.transform = `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(${sc}) rotate(${(1 - eoe(p)) * -18}deg)`;
+  ctx.tile.style.filter = `blur(${(1 - eoe(p)) * 26}px)`;
+  const rp = prog(t, 16, 17.2);
+  ctx.ring.style.transform = `translate(-50%,-50%) scale(${1 + eo(rp) * 7})`; ctx.ring.style.opacity = 1 - rp;
+  const rp2 = prog(t, 16.15, 17.6);
+  ctx.ring2.style.transform = `translate(-50%,-50%) scale(${1 + eo(rp2) * 9})`; ctx.ring2.style.opacity = (1 - rp2) * 0.8;
+  const pp = prog(t, 16, 18.4);
+  ctx.parts.forEach((d) => { const a = +d.dataset.a, v = +d.dataset.v * eo(pp); d.style.transform = `translate(${960 + Math.cos(a) * v}px, ${540 + Math.sin(a) * v + pp * pp * 260}px) rotate(${pp * 520}deg)`; d.style.opacity = 1 - Math.pow(pp, 2); });
+  const base = { x: 960 - 140, y: 540 - 160 };
+  ctx.letters.forEach((s, i) => {
+    const r = rnd(900 + i), q = eo(prog(t, 18 + i * 0.12, 19 + i * 0.12));
+    const fx = (r() - 0.5) * 1800, fy = (r() - 0.5) * 1000, fr = (r() - 0.5) * 220;
+    s.style.transform = `translate(${fx * (1 - q)}px, ${fy * (1 - q)}px) rotate(${fr * (1 - q)}deg) scale(${1 + (1 - q) * 1.5})`;
+    s.style.opacity = t >= S(18) ? 1 : 0;
+    s.style.filter = `blur(${(1 - q) * 16}px)`;
+  });
+  ctx.word.style.transform = `translate(${base.x - 70}px, ${base.y}px)`;
+  ctx.tw.forEach((s) => { const q = prog(t, +s.dataset.b, +s.dataset.b + 0.35); s.style.opacity = q > 0 ? 1 : 0; s.style.transform = `scale(${1.8 - 0.8 * eib(q)})`; s.style.filter = `blur(${(1 - q) * 12}px)`; s.style.textShadow = rgb(q > 0 && q < 0.4 ? 8 : 0); });
+});
+
+// D — the journey: Import / Test / Sign / Verify, with real screenshots (24-40)
+// img: [file, display width as a multiple of the cell width, x offset, y offset]
+const FEATURES = [
+  { word: "Import", sub: "a <i>real</i> repo from GitHub", img: [["dashboard", 2.0, 0.1, 40], ["build", 2.1, 0.2, 60], ["landing", 2.0, 0.15, 30]], chips: ["TeevincsCrypt/atlaspad", "Foundry ✓", "forge-std ✓"] },
+  { word: "Test", sub: "every <i>single</i> one", img: [["tests", 2.0, 0.22, 200], ["build", 2.1, 0.2, 60], ["execution-success", 1.7, 0.2, 140]], chips: ["114 passed ✓", "0 failed", "fuzz + invariants"] },
+  { word: "Sign", sub: "with <i>your</i> wallet", img: [["execution-review", 1.5, 0.58, 40], ["execution-wallet", 1.6, 0.6, 50], ["deploy-wizard", 2.0, 0.2, 80]], chips: ["type MAINNET ✓", "chain 1990 ✓", "keys never leave you"] },
+  { word: "Verify", sub: "on <i>QIE's</i> explorer", img: [["qie-mainnet-deployment", 1.05, 0.02, 0], ["deployment-record", 1.8, 0.2, 120], ["execution-success", 1.7, 0.2, 520]], chips: ["Source verified ✓", "block 12128375", "Confirmed ✓"] },
+];
+const LAYOUTS = [
+  { cells: [[60, 60, 960, 420], [1100, 90, 760, 430], [1100, 570, 760, 440]], word: [90, 640] },
+  { cells: [[60, 560, 820, 460], [1000, 60, 860, 420], [60, 60, 560, 440]], word: [1010, 640] },
+  { cells: [[1060, 60, 800, 960], [60, 60, 960, 380], [720, 470, 300, 260]], word: [80, 640] },
+  { cells: [[60, 60, 1300, 450], [1440, 60, 420, 560], [60, 680, 500, 340]], word: [640, 760] },
+];
+const DBG = ["#f6f3fb", "#f2f6fd", "#fbf3f6", "#f1f8f4"];
+scene(24, 40, (el) => {
+  const bg = $(`<div class="layer"></div>`); el.appendChild(bg);
+  const g = [];
+  [[0.33, "v"], [0.58, "v"], [0.5, "h"], [0.22, "h"], [0.8, "h"]].forEach(([p, d]) => { const l = $(`<div class="gridline"></div>`); l.style.cssText += d === "v" ? `left:${p * 1920}px;top:0;width:1px;height:1080px` : `top:${p * 1080}px;left:0;height:1px;width:1920px`; el.appendChild(l); g.push(l); });
+  const blobs = [];
+  for (let i = 0; i < 5; i++) { const b = i % 2 ? $(`<div class="plus"></div>`) : $(`<div class="blob" style="width:${120 + i * 30}px;height:${120 + i * 30}px;background:radial-gradient(circle at 35% 30%,#cfe2ff,#5b9bf0 55%,#2f6fe0)"></div>`); el.appendChild(b); blobs.push(b); }
+  const cells = [0, 1, 2].map(() => { const c = $(`<div class="cell"><img></div>`); el.appendChild(c); return c; });
+  const word = $(`<div class="abs" style="font-size:190px;font-weight:600;letter-spacing:-0.05em;line-height:1"></div>`);
+  const sub = $(`<div class="abs serif" style="font-size:64px;color:#2a6fcc;white-space:nowrap"></div>`);
+  el.append(word, sub);
+  const chips = [0, 1, 2].map(() => { const c = $(`<div class="chip"></div>`); el.appendChild(c); return c; });
+  return { bg, g, blobs, cells, word, sub, chips };
+}, (t, ctx, f) => {
+  const i = clamp(Math.floor((t - S(24)) / S(4)), 0, 3), F = FEATURES[i], Lo = LAYOUTS[i], b0 = 24 + i * 4;
+  ctx.bg.style.background = DBG[i];
+  const inP = prog(t, b0, b0 + 0.6);
+  const whip = Math.pow(prog(t, b0 + 3.75, b0 + 4), 2);
+  const kickPunch = 1 + 0.025 * Math.exp(-((t - S(Math.floor(t / B))) / 0.08));
+  ctx.word.innerHTML = F.word; ctx.sub.innerHTML = F.sub.replace(/<i>(.*?)<\/i>/, '<span style="color:#16161d">$1</span>');
+  ctx.word.style.transform = `translate(${Lo.word[0] + (1 - eoe(inP)) * -300 - whip * 900}px, ${Lo.word[1] - 120}px) scale(${kickPunch})`;
+  ctx.word.style.filter = `blur(${(1 - eoe(inP)) * 20 + whip * 30}px)`;
+  ctx.word.style.textShadow = rgb(inP < 0.3 ? 12 : 0);
+  ctx.sub.style.transform = `translate(${Lo.word[0] + 8 - whip * 900}px, ${Lo.word[1] + 90}px)`;
+  ctx.sub.style.opacity = prog(t, b0 + 0.5, b0 + 1);
+  ctx.cells.forEach((c, k) => {
+    const [x, y, w, h] = Lo.cells[k], cp = prog(t, b0 + k * 0.5, b0 + k * 0.5 + 0.5);
+    c.style.left = x + "px"; c.style.top = y + "px"; c.style.width = w + "px"; c.style.height = h + "px";
+    c.style.clipPath = `inset(0 ${100 - eoe(cp) * 100}% 0 0 round 16px)`;
+    const [name, mult, ox, oy] = F.img[k];
+    const img = c.firstElementChild, src = `assets/${name}.png`;
+    if (!img.src.endsWith(src)) img.src = src;
+    const kb = prog(t, b0, b0 + 4);
+    img.style.width = (w * mult) + "px";
+    img.style.transform = `translate(${-w * (ox + 0.12 * kb * (mult > 1.2 ? 1 : 0))}px, ${-oy - 60 * kb * (mult > 1.2 ? 1 : 0)}px) scale(${1.0 + 0.06 * kb})`;
+    c.style.transform = `translateX(${-whip * 900}px)`;
+    c.style.boxShadow = "0 30px 60px -24px rgba(40,50,110,.35)";
+  });
+  ctx.chips.forEach((c, k) => {
+    const cb = b0 + 1 + k * 0.5, cp = prog(t, cb, cb + 0.3);
+    c.innerHTML = F.chips[k].replace("✓", '<span class="okt">✓</span>');
+    const prevW = k ? ctx.chips.slice(0, k).reduce((a, x) => a + x.offsetWidth + 16, 0) : 0;
+    c.style.left = (Lo.word[0] + 8 + prevW) + "px"; c.style.top = (Lo.word[1] + 190) + "px";
+    c.style.transformOrigin = "left center";
+    c.style.opacity = cp > 0 ? 1 : 0;
+    c.style.transform = `scale(${1.6 - 0.6 * eib(cp)}) translateX(${-whip * 900}px)`;
+  });
+  ctx.blobs.forEach((b, k) => { const r = rnd(70 + k + i * 10); b.style.transform = `translate(${(Lo.word[0] > 500 ? 80 : 1000) + r() * 750 + Math.sin(t * 1.3 + k) * 80}px, ${40 + r() * 420 + Math.cos(t * 1.1 + k) * 60}px) rotate(${t * 40 * (k % 2 ? 1 : -1)}deg) scale(${0.6 + r() * 0.6})`; b.style.filter = `blur(${k % 3 === 0 ? 6 : 0}px)`; b.style.opacity = 0.85; });
+  ctx.g.forEach((l, k) => { l.style.transform = `translate(${Math.sin(t + k) * 12}px, ${Math.cos(t * 1.2 + k) * 10}px)`; });
+});
+
+// E — receipts stamped one by one → VERIFIED (40-48)
+const RECEIPTS = [
+  ["Contract", `${ADDR.slice(0, 10)}…${ADDR.slice(-6)}`],
+  ["Transaction", `${TX.slice(0, 10)}…${TX.slice(-6)}`],
+  ["Block", "12128375"],
+  ["Network", "QIE Mainnet · 1990"],
+  ["Source", "Verified ✓"],
+];
+scene(40, 48, (el) => {
+  const bg = $(`<div class="layer" style="background:radial-gradient(ellipse 50% 60% at 0% 0%,#e3eefd,transparent 70%),radial-gradient(ellipse 50% 60% at 100% 100%,#e2f6ec,transparent 70%),#f7f7fb"></div>`);
+  el.appendChild(bg);
+  const stream = $(`<div class="abs mono" style="left:-200px;top:140px;font-size:110px;color:rgba(22,22,29,.06);white-space:nowrap;line-height:1.35">${TX}<br>${ADDR} · block 12128375 · chain 1990<br>${TX}</div>`);
+  el.appendChild(stream);
+  const title = $(`<div class="abs" style="left:140px;top:150px;font-size:118px;font-weight:600;letter-spacing:-0.045em;white-space:nowrap"><span>Receipts,</span> <span class="serif" style="color:#3d89e9;font-size:130px">straight from mainnet.</span></div>`);
+  el.appendChild(title);
+  const rows = RECEIPTS.map(([k, v], i) => { const r = $(`<div class="abs" style="left:160px;top:${390 + i * 112}px;display:flex;align-items:center;gap:26px;font-size:56px;font-weight:500;white-space:nowrap"><span class="check" style="width:60px;height:60px;font-size:32px">✓</span><span style="color:#6c6c80;width:330px">${k}</span><span class="${k === "Source" || k === "Network" || k === "Block" ? "" : "mono"}" style="${k === "Source" ? "color:#1f9d63;font-weight:600" : ""}">${v}</span></div>`); el.appendChild(r); return r; });
+  const white = $(`<div class="layer" style="background:#fff"></div>`);
+  const ver = $(`<div class="center" style="font-size:330px;font-weight:900;letter-spacing:-0.06em;color:#3d89e9;white-space:nowrap">VERIFIED</div>`);
+  const on = $(`<div class="center serif" style="font-size:96px;color:#16161d;white-space:nowrap">on QIE Mainnet.</div>`);
+  white.append(ver, on); el.appendChild(white);
+  return { stream, parts: [...title.children], rows, white, ver, on };
+}, (t, ctx) => {
+  ctx.stream.style.transform = `translateX(${-((t - S(40)) * 260)}px)`;
+  ctx.parts.forEach((s, i) => { const q = prog(t, 40 + i, 40.4 + i); s.style.display = "inline-block"; s.style.opacity = q > 0 ? 1 : 0; s.style.filter = `blur(${(1 - eoe(q)) * 18}px)`; s.style.transform = `translateY(${(1 - eoe(q)) * 40}px)`; });
+  [42, 43, 44, 45, 45.5].forEach((b, i) => { const q = prog(t, b, b + 0.3), r = ctx.rows[i]; r.style.opacity = q > 0 ? 1 : 0; r.style.transform = `scale(${1.5 - 0.5 * eib(q)}) translateX(${(1 - q) * -40}px)`; r.style.transformOrigin = "left center"; });
+  ctx.white.style.display = t >= S(46) ? "block" : "none";
+  const vp = prog(t, 46, 46.7), out = Math.pow(prog(t, 47.4, 48), 2);
+  ctx.ver.style.transform = `translate(-50%,-58%) scaleX(${3.2 - 2.2 * eoe(vp) + out * 2}) scaleY(${0.4 + 0.6 * eoe(vp)}) skewX(${(1 - vp) * -25}deg)`;
+  ctx.ver.style.filter = `blur(${(1 - eoe(vp)) * 26 + out * 30}px)`;
+  ctx.ver.style.textShadow = rgb(vp > 0 && vp < 0.5 ? 14 : 0);
+  ctx.on.style.transform = `translate(-50%, 160px)`; ctx.on.style.opacity = prog(t, 46.6, 47) * (1 - out);
+});
+
+// F — the Runbook steps fly in, then stat counters (48-56)
+const STEPS = [["Compile contracts", "Local build", "#e5eefc", "#2360b8"], ["Run tests · 114 ✓", "Local build", "#e5eefc", "#2360b8"], ["Typed MAINNET", "Human", "#fdf1dc", "#8a5a12"], ["Wallet signed", "Wallet", "#fbe4ec", "#a92f53"], ["Confirmed on-chain", "Automated", "#ededf5", "#6c6c80"], ["Source verified", "Explorer", "#e2f6ec", "#1f7a4d"]];
+scene(48, 56, (el) => {
+  const bg = $(`<div class="layer" style="background:radial-gradient(ellipse 50% 60% at 10% 0%,#fbe4ec,transparent 70%),radial-gradient(ellipse 50% 70% at 90% 10%,#dde9fb,transparent 70%),#f3f3f9"></div>`);
+  el.appendChild(bg);
+  const title = $(`<div class="abs" style="left:130px;top:170px;color:#16161d;font-size:150px;font-weight:600;letter-spacing:-0.05em;line-height:1">One Runbook.</div>`);
+  const sub = $(`<div class="abs serif" style="left:136px;top:350px;color:#2a6fcc;font-size:72px;white-space:nowrap">from repo to mainnet.</div>`);
+  el.append(title, sub);
+  const cards = STEPS.map(([n, c, bgc, fg]) => { const s = $(`<div class="step"><span class="check">✓</span><span>${n}</span><span class="pill" style="background:${bgc};color:${fg}">${c}</span></div>`); el.appendChild(s); return s; });
+  const statBg = $(`<div class="layer" style="background:#fff"></div>`);
+  const stat = $(`<div class="center" style="color:#16161d;text-align:center;white-space:nowrap"><div class="n" style="font-size:340px;font-weight:700;letter-spacing:-0.06em;line-height:.9;color:#3d89e9"></div><div class="l serif" style="font-size:90px"></div></div>`);
+  el.append(statBg, stat);
+  return { title, sub, cards, stat, statBg };
+}, (t, ctx, f) => {
+  const tq = prog(t, 48, 48.5), sq = prog(t, 49, 49.5);
+  ctx.title.style.transform = `translateY(${(1 - eoe(tq)) * 120}px)`; ctx.title.style.opacity = tq > 0 ? 1 : 0; ctx.title.style.filter = `blur(${(1 - eoe(tq)) * 20}px)`;
+  ctx.sub.style.opacity = sq; ctx.sub.style.transform = `translateX(${(1 - eoe(sq)) * -60}px)`;
+  ctx.cards.forEach((c, i) => {
+    const q = eo(prog(t, 48.5 + i * 0.4, 50 + i * 0.4)), r = rnd(300 + i);
+    const tx = 1080 + r() * 220, ty = 150 + i * 135;
+    c.style.transform = `translate(${lerp(2100, tx, q)}px, ${lerp(1200, ty, q) + Math.sin(t * 2 + i) * 10}px) rotate(${lerp(40 + r() * 40, (r() - 0.5) * 10, q)}deg) scale(${lerp(1.6, 1, q)})`;
+  });
+  const statOn = t >= S(52) && t < S(55.5);
+  ctx.stat.style.display = ctx.statBg.style.display = statOn ? "block" : "none";
+  if (statOn) {
+    const k = clamp(Math.floor((t - S(52)) / B), 0, 2), q = prog(t, 52 + k, 52.35 + k);
+    const data = [["1990", "chain id"], ["12,128,375", "the block it landed in"], ["0", "private keys shared"]][k];
+    const spinning = q < 0.6;
+    ctx.stat.querySelector(".n").textContent = spinning ? data[0].replace(/\d/g, () => String(Math.floor(hash(f + k) * 10))) : data[0];
+    ctx.stat.querySelector(".l").textContent = data[1];
+    ctx.stat.style.transform = `translate(-50%,-50%) scale(${1.4 - 0.4 * eib(q)})`;
+    ctx.stat.querySelector(".n").style.textShadow = spinning ? rgb(10, 0.6) : "none";
+  }
+});
+
+// G — outro: letters assemble "we're on mainnet." → lockup + link (56-68)
+scene(56, 68, (el) => {
+  const phrase = "we're on mainnet.";
+  const wrap = $(`<div class="center" style="font-size:150px;font-weight:600;letter-spacing:-0.045em;white-space:pre"></div>`);
+  const ls = [...phrase].map((ch, i) => { const s = $(`<span style="display:inline-block;${i >= 9 ? "color:#3d89e9" : ""}">${ch}</span>`); wrap.appendChild(s); return s; });
+  el.appendChild(wrap);
+  const blobs = [];
+  for (let i = 0; i < 6; i++) { const b = i % 3 === 1 ? $(`<div class="plus"></div>`) : $(`<div class="blob" style="width:${90 + i * 25}px;height:${90 + i * 25}px;background:radial-gradient(circle at 35% 30%,#cfe2ff,#5b9bf0 55%,#2f6fe0)"></div>`); el.appendChild(b); blobs.push(b); }
+  const lock = $(`<div class="center" style="display:flex;align-items:center;gap:56px"><div class="tile" style="width:230px;height:230px;border-radius:52px;border:1px solid #e3e3ee;box-shadow:0 0 0 16px rgba(61,137,233,.12),0 40px 90px -24px rgba(40,60,140,.45)">${MARK(160, "b")}</div><div style="font-size:170px;font-weight:700;letter-spacing:0.04em;white-space:nowrap;color:#2b2d33">4<span style="color:#3d89e9">ORGE</span></div></div>`);
+  const tag = $(`<div class="abs" style="left:0;right:0;top:720px;text-align:center;font-size:56px;color:#55586a;white-space:nowrap">Compile, test &amp; deploy on <b style="color:#16161d;font-weight:600">QIE Mainnet</b>, from one workspace.</div>`);
+  const cta = $(`<div class="abs" style="left:0;right:0;top:830px;text-align:center;white-space:nowrap"><span class="mono" style="display:inline-block;font-size:44px;background:#16161d;color:#fff;border-radius:999px;padding:18px 38px">4orge-production.up.railway.app</span></div>`);
+  el.append(lock, tag, cta);
+  return { wrap, ls, blobs, lock, tag, cta };
+}, (t, ctx) => {
+  const asm = eo(prog(t, 56, 59.2)), hide = t >= S(60);
+  ctx.wrap.style.display = hide ? "none" : "block";
+  ctx.ls.forEach((s, i) => { const r = rnd(1200 + i); const fx = (r() - 0.5) * 1700, fy = (r() - 0.5) * 900; s.style.transform = `translate(${fx * (1 - asm)}px, ${fy * (1 - asm)}px) rotate(${(r() - 0.5) * 300 * (1 - asm)}deg) scale(${1 + (1 - asm) * (r() - 0.3)})`; s.style.filter = `blur(${(1 - asm) * 8}px)`; });
+  ctx.blobs.forEach((b, k) => { const r = rnd(40 + k); const sp = hide ? 1 + prog(t, 60, 61) * 3 : 1; b.style.transform = `translate(${960 + (r() - 0.5) * 1600 * sp + Math.sin(t + k) * 60}px, ${540 + (r() - 0.5) * 900 * sp + Math.cos(t * 1.2 + k) * 50}px) rotate(${t * 50}deg)`; b.style.opacity = 1 - prog(t, 60, 61.2); });
+  const lp = prog(t, 60, 60.7);
+  ctx.lock.style.display = hide ? "flex" : "none";
+  ctx.lock.style.transform = `translate(-50%, calc(-50% - 70px)) scale(${2.2 - 1.2 * eib(lp)})`;
+  ctx.lock.style.filter = `blur(${(1 - eoe(lp)) * 24}px)`;
+  const tp = prog(t, 61, 61.6), cp = prog(t, 62, 62.6), fade = prog(t, 66.5, 68);
+  ctx.tag.style.opacity = tp * (1 - fade); ctx.tag.style.transform = `translateY(${(1 - eoe(tp)) * 30}px)`;
+  ctx.cta.style.opacity = cp * (1 - fade); ctx.cta.style.transform = `scale(${1.3 - 0.3 * eib(cp)})`;
+  ctx.lock.style.opacity = 1 - fade;
+});
+
+// ------------------------------------------------------------------ master render
+const stage = document.getElementById("stage"), flash = document.getElementById("flash"), tint = document.getElementById("tint"), dots = document.getElementById("dots");
+function flashAt(t, beats, dur = 0.12, max = 1) { let a = 0; for (const b of beats) { const d = t - S(b); if (d >= 0 && d < dur) a = Math.max(a, max * (1 - d / dur)); } return a; }
+function shakeAmt(t) {
+  let s = 0;
+  if (t >= S(5) && t < S(7.5)) s = 10;
+  if (t >= S(8) && t < S(14)) s = 6 + 20 * prog(t, 8, 14);
+  const hits = [16, 46, 60, 24, 28, 32, 36, 20, 21, 22, 23, 52, 53, 54, 4];
+  for (const b of hits) { const d = t - S(b); if (d >= 0 && d < 0.35) s = Math.max(s, (b === 16 || b === 46 || b === 60 ? 46 : 18) * (1 - d / 0.35)); }
+  return s;
+}
+window.render = function (t) {
+  const f = Math.round(t * 30);
+  for (const sc of SCENES) { const on = t >= S(sc.b0) && t < S(sc.b1); sc.el.style.display = on ? "block" : "none"; if (on) sc.update(t, sc.ctx, f); }
+  let leakI = 0.6;
+  if (t < S(8)) leakI = 0.45 + 0.35 * prog(t, 0, 8);
+  else if (t < S(16)) leakI = 0;
+  else if (t < S(24)) leakI = 1.0 - 0.3 * prog(t, 16, 18);
+  else leakI = 0.6;
+  setLeaks(t, leakI);
+  dots.style.opacity = t < S(8) || t >= S(56) ? 0.5 : 0;
+  const s = shakeAmt(t);
+  const sx = (hash(f * 3) - 0.5) * 2 * s, sy = (hash(f * 5 + 1) - 0.5) * 2 * s;
+  stage.style.transform = `translate(${sx}px, ${sy}px) rotate(${(hash(f * 7) - 0.5) * s * 0.04}deg)`;
+  // Chaos without darkness: on some off-beats, push saturation/hue instead of inverting.
+  const k = Math.floor((t - S(8)) / S(0.25));
+  stage.style.filter = t >= S(8) && t < S(14) && hash(k + 99) > 0.75 ? "saturate(1.8) hue-rotate(-25deg)" : t >= S(5) && t < S(7.5) && hash(f) > 0.9 ? "hue-rotate(160deg) saturate(1.6)" : "none";
+  tint.style.background = t >= S(5) && t < S(7.5) && hash(f + 5) > 0.82 ? "rgba(255,60,120,.10)" : "transparent";
+  // light-blue flashes on key hits (never black)
+  flash.style.opacity = Math.max(
+    flashAt(t, [16], 0.3, 0.55), flashAt(t, [46, 60], 0.24, 0.45), flashAt(t, [5, 24, 28, 32, 36, 40, 48, 56], 0.1, 0.32),
+    flashAt(t, [52, 53, 54], 0.08, 0.25)
+  );
+  drawGrain(f, 0.07);
+};
+window.ready = Promise.all([document.fonts.ready, ...["dashboard", "build", "landing", "tests", "execution-success", "execution-review", "execution-wallet", "deploy-wizard", "qie-mainnet-deployment", "deployment-record"].map((n) => new Promise((res) => { const i = new Image(); i.onload = res; i.onerror = res; i.src = `assets/${n}.png`; }))]);
+</script>
+</body>
+</html>

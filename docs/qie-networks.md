@@ -33,6 +33,8 @@ Mainnet is shown for read-only checks, but **deployments are locked**. The serve
 
 The explorer is probed at runtime with `GET /api/v2/config/backend-version`. If it answers like **Blockscout**, 4ORGE submits the exact Standard JSON input it compiled (`/api/v2/smart-contracts/{address}/verification/via/standard-input`) and polls until the explorer reports `is_verified`. If the explorer exposes no compatible API, the deployment's verification status is **unsupported**. 4ORGE never reports a verification the explorer didn't confirm.
 
+QIE Mainnet's explorer (mainnet.qie.digital) supports this API: the first Mainnet deployment made with 4ORGE, AtlasGovernor at `0x8b9e799f6bb4b9b120de4293f8482c6112fac366`, is verified there.
+
 ## Custom RPC
 
 On the Network page, enter an `https://` URL (plain `http://` is allowed only for `localhost`). URLs containing credentials are rejected. Leave the field empty to return to the default.

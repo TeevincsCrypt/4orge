@@ -101,3 +101,19 @@ Code → https://github.com/TeevincsCrypt/4orge
 
 Tell us what you'd want it to do next 👇
 ```
+
+---
+
+# Update post: first QIE Mainnet deployment
+
+Image: `mainnet-update.png` (render with `node media/thread/capture.js update.html mainnet-update`)
+
+```text
+4ORGE is live on QIE Mainnet ✅
+
+Our first real contract, AtlasGovernor, went end to end through 4ORGE:
+imported from GitHub → compiled → tested → reviewed → signed in our wallet → checked on-chain → source verified on QIE's explorer.
+
+See it on-chain 👇
+https://mainnet.qie.digital/address/0x8b9e799f6bb4b9b120de4293f8482c6112fac366?tab=contract
+```

@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>4ORGE Mainnet update</title>
+<!-- Rendered by capture.js (node media/thread/capture.js update.html update) -->
+<style>
+@font-face{font-family:G;src:url(../../node_modules/geist/dist/fonts/geist-sans/Geist-Regular.woff2);font-weight:400}
+@font-face{font-family:G;src:url(../../node_modules/geist/dist/fonts/geist-sans/Geist-Medium.woff2);font-weight:500}
+@font-face{font-family:G;src:url(../../node_modules/geist/dist/fonts/geist-sans/Geist-SemiBold.woff2);font-weight:600}
+@font-face{font-family:G;src:url(../../node_modules/geist/dist/fonts/geist-sans/Geist-Bold.woff2);font-weight:700}
+@font-face{font-family:M;src:url(../../node_modules/geist/dist/fonts/geist-mono/GeistMono-Regular.woff2);font-weight:400}
+@font-face{font-family:M;src:url(../../node_modules/geist/dist/fonts/geist-mono/GeistMono-Medium.woff2);font-weight:500}
+:root{
+  --canvas:#F1F1F7; --panel:#FFFFFF; --ink:#14141B; --graphite:#2B2D33; --muted:#5D606A; --faint:#8A8D96;
+  --line:#E3E3EC; --brand:#3D89E9; --accent:#2A6FCC; --soft:#E8F1FD;
+  --ok:#16924A; --okbg:#E7F6EC; --warn:#B76E00; --warnbg:#FFF3DF; --bad:#C8322B; --badbg:#FDECEA;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#d9d9e3;font-family:G,system-ui,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+.slide{width:1200px;height:675px;position:relative;overflow:hidden;background:var(--canvas);margin:0 0 24px}
+/* backdrop: dot grid + brand glow */
+.slide::before{content:"";position:absolute;inset:0;background-image:radial-gradient(#c9c9d6 1px,transparent 1.2px);background-size:22px 22px;opacity:.55;
+  -webkit-mask-image:radial-gradient(ellipse 80% 90% at 70% 40%,#000 30%,transparent 80%);mask-image:radial-gradient(ellipse 80% 90% at 70% 40%,#000 30%,transparent 80%)}
+.slide::after{content:"";position:absolute;width:760px;height:760px;right:-260px;top:-300px;border-radius:50%;background:radial-gradient(circle,rgba(61,137,233,.20),rgba(61,137,233,0) 65%)}
+.slide>*{position:relative;z-index:1}
+.top{position:absolute;left:56px;right:56px;top:40px;display:flex;align-items:center;justify-content:space-between;z-index:2}
+.lock{display:flex;align-items:center;gap:12px;font-weight:600;font-size:24px;letter-spacing:.06em}
+.lock img{height:34px}
+.lock .four{color:var(--graphite)} .lock .orge{color:var(--brand)}
+.count{font-family:M;font-size:16px;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 14px}
+.count b{color:var(--ink);font-weight:500}
+.eyebrow{font-size:15px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1{font-size:58px;line-height:1.04;font-weight:650;letter-spacing:-.025em}
+h1 em{font-style:normal;color:var(--brand)}
+.lead{font-size:21px;line-height:1.45;color:var(--muted)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:0 1px 2px rgba(20,20,27,.04),0 18px 40px -18px rgba(20,20,27,.18)}
+.pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;font-size:15px;font-weight:500;padding:7px 14px;background:#fff;border:1px solid var(--line);color:var(--graphite)}
+.ic{width:20px;height:20px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ok{color:var(--ok)}
+.footnote{position:absolute;left:56px;bottom:36px;font-size:15px;color:var(--faint)}
+
+
+#u .copy{position:absolute;left:56px;top:128px;width:520px}
+#u h1{font-size:60px;margin:14px 0 18px}
+#u .lead{font-size:20px}
+#u .flow{display:flex;flex-wrap:wrap;gap:8px;margin-top:30px;width:520px}
+#u .flow span{display:inline-flex;align-items:center;gap:7px;font-size:15px;font-weight:500;color:var(--graphite);background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 12px 7px 9px}
+#u .flow .ic{width:17px;height:17px;color:var(--ok)}
+#u .rec{position:absolute;left:620px;top:128px;width:524px;padding:0;overflow:hidden}
+#u .rec .hd{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--line)}
+#u .rec .hd b{font-size:20px;font-weight:600}
+#u .rec .hd small{display:block;font-family:M;font-size:13px;color:var(--faint);margin-top:3px;font-weight:400}
+#u .st{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:600;border-radius:999px;padding:6px 12px;background:var(--okbg);color:var(--ok)}
+#u .st .ic{width:16px;height:16px}
+#u .row{display:flex;justify-content:space-between;align-items:center;padding:14px 24px;border-bottom:1px solid var(--line);font-size:16px}
+#u .row:last-child{border-bottom:0}
+#u .row .k{color:var(--muted)}
+#u .row .v{font-family:M;font-size:15px;color:var(--ink)}
+#u .row .v em{font-style:normal;font-family:G;font-weight:500;font-size:16px}
+#u .row .v i{font-style:normal;color:var(--faint);font-size:13px;margin-left:6px}
+#u .ver{display:flex;align-items:center;gap:14px;padding:18px 24px;background:linear-gradient(90deg,#eef8f1,#fff)}
+#u .ver .badge{width:44px;height:44px;border-radius:13px;background:#fff;border:1px solid #cdebd8;display:grid;place-items:center;color:var(--ok)}
+#u .ver .badge .ic{width:24px;height:24px}
+#u .ver b{display:block;font-size:17px;font-weight:600;color:var(--ok)}
+#u .ver span{font-size:14px;color:var(--muted)}
+#u .link{position:absolute;left:56px;bottom:36px;font-family:M;font-size:15px;color:var(--accent)}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></symbol>
+</svg>
+<section class="slide" id="u">
+  <div class="top"><div class="lock"><img src="../../public/brand/4orge-mark.svg" alt=""><span><span class="four">4</span><span class="orge">ORGE</span></span></div><div class="count"><b>Milestone</b></div></div>
+  <div class="copy">
+    <div class="eyebrow">First mainnet deployment</div>
+    <h1>Live on <em>QIE Mainnet.</em></h1>
+    <p class="lead">Our first real contract, shipped end to end with 4ORGE and verified on QIE&rsquo;s explorer.</p>
+    <div class="flow">
+      <span><svg class="ic"><use href="#i-check"/></svg>Imported from GitHub</span>
+      <span><svg class="ic"><use href="#i-check"/></svg>Compiled</span>
+      <span><svg class="ic"><use href="#i-check"/></svg>Tested</span>
+      <span><svg class="ic"><use href="#i-check"/></svg>Reviewed</span>
+      <span><svg class="ic"><use href="#i-check"/></svg>Signed in wallet</span>
+      <span><svg class="ic"><use href="#i-check"/></svg>Checked on-chain</span>
+      <span><svg class="ic"><use href="#i-check"/></svg>Source verified</span>
+    </div>
+  </div>
+  <div class="rec card">
+    <div class="hd"><div><b>AtlasGovernor</b><small>contracts/src/AtlasGovernor.sol</small></div><span class="st"><svg class="ic"><use href="#i-check"/></svg>Confirmed</span></div>
+    <div class="row"><span class="k">Network</span><span class="v"><em>QIE Mainnet</em><i>chain 1990</i></span></div>
+    <div class="row"><span class="k">Contract</span><span class="v">0x8b9e799f…6112fac366</span></div>
+    <div class="row"><span class="k">Transaction</span><span class="v">0xec7eca64…38c0faa55</span></div>
+    <div class="row"><span class="k">Block</span><span class="v">12128375</span></div>
+    <div class="ver"><div class="badge"><svg class="ic"><use href="#i-shield"/></svg></div><div><b>Source verified</b><span>on mainnet.qie.digital</span></div></div>
+  </div>
+  <div class="link">mainnet.qie.digital/address/0x8b9e799f6bb4b9b120de4293f8482c6112fac366</div>
+</section>
+</body>
+</html>

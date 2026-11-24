@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { formatEther } from "viem";
-import { ChevronRight, Download, FileText, PenLine, RotateCcw, ShieldCheck, Square, Wallet } from "lucide-react";
+import { ChevronRight, Download, FileText, Maximize2, Minus, PenLine, RotateCcw, ShieldCheck, Square, Wallet } from "lucide-react";
 import { useApp } from "@/components/app-context";
 import { Markdown } from "@/components/markdown";
 import { WalletButton } from "@/components/shell";
@@ -83,6 +84,7 @@ export default function ExecutionPage() {
   if (!execution) return null;
   const network = getNetwork(execution.network);
   const active = ACTIVE.includes(execution.status);
+  const docked = (execution.status === "awaiting_confirmation" || execution.status === "awaiting_wallet") && Boolean(next);
 
   async function act(path: string, body: unknown) {
     setActionError(null);
@@ -109,7 +111,8 @@ export default function ExecutionPage() {
       />
       {actionError && <Callout tone="bad" className="mb-4">{actionError}</Callout>}
 
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_400px]">
+      {/* While a review/wallet popup is open, leave room below the steps so they can scroll above the bottom sheet. */}
+      <div className={cn("grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_400px]", docked && "pb-[62vh] xl:pb-0")}>
         <div className="min-w-0 space-y-4">
           {needsWalletForPrepare && (
             <Callout tone="blue" title="Connect the deployer wallet to continue">
@@ -117,12 +120,13 @@ export default function ExecutionPage() {
               <div className="mt-2"><WalletButton /></div>
             </Callout>
           )}
-          {execution.status === "awaiting_confirmation" && next && <ConfirmPanel execution={execution} step={next} onConfirm={(typed) => act("confirm", { stepId: next.stepId, typed })} />}
+          {execution.status === "awaiting_confirmation" && next && <ConfirmPanel execution={execution} step={next} onConfirm={(typed) => act("confirm", { stepId: next.stepId, typed })} onCancel={() => act("cancel", {})} />}
           {execution.status === "awaiting_wallet" && next && (
             <WalletPanel
               execution={execution}
               step={next}
               onResult={(body) => act("wallet", { stepId: next.stepId, ...body })}
+              onCancel={execution.context.txHash ? undefined : () => act("cancel", {})}
             />
           )}
           {execution.status === "succeeded" && execution.context.contractAddress && (
@@ -229,7 +233,7 @@ function DeploymentSummary({ execution }: { execution: RunbookExecution }) {
   );
 }
 
-function ConfirmPanel({ execution, step, onConfirm }: { execution: RunbookExecution; step: StepState; onConfirm: (typed?: string) => Promise<void> }) {
+function ConfirmPanel({ execution, step, onConfirm, onCancel }: { execution: RunbookExecution; step: StepState; onConfirm: (typed?: string) => Promise<void>; onCancel?: () => Promise<void> }) {
   const [busy, setBusy] = useState(false);
   const [typed, setTyped] = useState("");
   const def = execution.definition.steps.find((s) => s.id === step.stepId);
@@ -237,9 +241,13 @@ function ConfirmPanel({ execution, step, onConfirm }: { execution: RunbookExecut
   const mainnet = getNetwork(execution.network).kind === "mainnet";
   const ready = !mainnet || typed.trim() === "MAINNET";
   return (
-    <Card padded={false} className={mainnet ? "border-bad/40" : "border-warn/40"}>
-      <CardHeader title="Review before signing" description={message ?? "All automated checks have run. Confirm the deployment details below."} icon={<PenLine className="size-4" />} />
-      <div className="space-y-4 p-5">
+    <ActionDock
+      title="Review before signing"
+      description={message ?? "All automated checks have run. Confirm the deployment details below."}
+      icon={<PenLine className="size-4" />}
+      tone={mainnet ? "bad" : "warn"}
+      onCancel={onCancel}
+    >
         <DeploymentSummary execution={execution} />
         {mainnet && (
           <Callout tone="bad" title="This is QIE Mainnet — real funds">
@@ -250,6 +258,7 @@ function ConfirmPanel({ execution, step, onConfirm }: { execution: RunbookExecut
               onChange={(e) => setTyped(e.target.value)}
               placeholder="MAINNET"
               aria-label="Type MAINNET to confirm"
+              autoFocus
               className="mono mt-2 block h-10 w-48 rounded-xl border border-bad/30 bg-panel px-3 text-sm text-text focus:outline-none focus:ring-4 focus:ring-bad/10"
             />
           </Callout>
@@ -257,12 +266,11 @@ function ConfirmPanel({ execution, step, onConfirm }: { execution: RunbookExecut
         <Button variant="primary" disabled={!ready} loading={busy} onClick={async () => { setBusy(true); await onConfirm(mainnet ? typed.trim() : undefined); setBusy(false); }}>
           I have reviewed this — continue to wallet
         </Button>
-      </div>
-    </Card>
+    </ActionDock>
   );
 }
 
-function WalletPanel({ execution, step, onResult }: { execution: RunbookExecution; step: StepState; onResult: (b: { txHash?: string; from?: string; error?: { code?: number; message: string } }) => Promise<void> }) {
+function WalletPanel({ execution, step, onResult, onCancel }: { execution: RunbookExecution; step: StepState; onResult: (b: { txHash?: string; from?: string; error?: { code?: number; message: string } }) => Promise<void>; onCancel?: () => Promise<void> }) {
   const wallet = useWallet();
   const { setNetworkId } = useApp();
   const [busy, setBusy] = useState(false);
@@ -285,9 +293,13 @@ function WalletPanel({ execution, step, onResult }: { execution: RunbookExecutio
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [execution.id, step.stepId]);
   return (
-    <Card padded={false} className="border-accent/50">
-      <CardHeader title="Wallet approval required" description="Your wallet will show its own confirmation. Nothing is sent unless you approve it there." icon={<Wallet className="size-4" />} />
-      <div className="space-y-4 p-5">
+    <ActionDock
+      title="Wallet approval required"
+      description="Your wallet will show its own confirmation. Nothing is sent unless you approve it there."
+      icon={<Wallet className="size-4" />}
+      tone="accent"
+      onCancel={busy ? undefined : onCancel}
+    >
         {network.kind === "mainnet" && <Callout tone="bad">QIE Mainnet: approving in your wallet spends real QIE. Check the network and amount in your wallet before you approve.</Callout>}
         <DeploymentSummary execution={execution} />
         {!wallet.address && <Callout tone="blue">Connect the deployer wallet ({p.from}) to sign. <span className="mt-2 block"><WalletButton /></span></Callout>}
@@ -334,8 +346,84 @@ function WalletPanel({ execution, step, onResult }: { execution: RunbookExecutio
         >
           Sign & deploy with wallet
         </Button>
-      </div>
-    </Card>
+    </ActionDock>
+  );
+}
+
+const DOCK_TONE = {
+  warn: { border: "border-warn/40", icon: "bg-warn/10 text-warn" },
+  bad: { border: "border-bad/40", icon: "bg-bad/10 text-bad" },
+  accent: { border: "border-accent/50", icon: "bg-accent-soft text-accent" },
+} as const;
+
+/**
+ * A floating, non-blocking popup for the steps that need the user (review, wallet).
+ * It docks on the right on wide screens, over the execution log, and rises from
+ * the bottom on smaller ones, so the step list stays visible while it is open.
+ * It can be minimized to a pill and brought back.
+ */
+function ActionDock({ title, description, icon, tone, onCancel, children }: { title: string; description: string; icon: React.ReactNode; tone: keyof typeof DOCK_TONE; onCancel?: () => Promise<void>; children: React.ReactNode }) {
+  const [minimized, setMinimized] = useState(false);
+  const titleId = useId();
+  const t = DOCK_TONE[tone];
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMinimized(true);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  if (minimized) {
+    return createPortal(
+      <button
+        onClick={() => setMinimized(false)}
+        className="dock-in fixed right-4 bottom-4 z-50 flex items-center gap-2 rounded-full bg-ink px-4 py-3 text-sm font-medium text-white shadow-pop hover:bg-ink/90 sm:right-6 sm:bottom-6"
+      >
+        <span className="relative flex size-2"><span className="absolute inline-flex size-full animate-ping rounded-full bg-white/70" /><span className="relative inline-flex size-2 rounded-full bg-white" /></span>
+        {title}
+        <Maximize2 className="size-3.5 opacity-70" />
+      </button>,
+      document.body,
+    );
+  }
+
+  return createPortal(
+    <section
+      role="dialog"
+      aria-modal="false"
+      aria-labelledby={titleId}
+      className={cn(
+        "dock-in fixed z-50 flex flex-col overflow-hidden rounded-2xl border bg-panel shadow-pop",
+        // Phones and tablets: bottom sheet. Wide screens: right-hand panel over the execution log.
+        "inset-x-3 bottom-3 max-h-[60vh] sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[460px] xl:top-20 xl:bottom-6 xl:max-h-none xl:w-[420px]",
+        t.border,
+      )}
+    >
+      <header className="flex items-start gap-3 border-b border-line px-5 py-4">
+        <span className={cn("grid size-8 shrink-0 place-items-center rounded-xl", t.icon)}>{icon}</span>
+        <div className="min-w-0 flex-1">
+          <h2 id={titleId} className="text-sm font-semibold text-text">{title}</h2>
+          <p className="mt-0.5 text-xs text-muted">{description}</p>
+        </div>
+        <button
+          onClick={() => setMinimized(true)}
+          aria-label="Minimize"
+          title="Minimize (Esc)"
+          className="grid size-8 shrink-0 place-items-center rounded-lg text-muted hover:bg-panel-2 hover:text-text"
+        >
+          <Minus className="size-4" />
+        </button>
+      </header>
+      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">{children}</div>
+      {onCancel && (
+        <footer className="flex items-center justify-between gap-3 border-t border-line bg-panel-2 px-5 py-3 text-xs text-muted">
+          <span>Changed your mind? Nothing has been sent yet.</span>
+          <Button variant="danger" size="sm" icon={<Square className="size-3.5" />} onClick={() => void onCancel()}>Cancel deployment</Button>
+        </footer>
+      )}
+    </section>,
+    document.body,
   );
 }
 

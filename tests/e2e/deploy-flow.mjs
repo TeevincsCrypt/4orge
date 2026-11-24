@@ -192,15 +192,26 @@ async function main() {
   log("execution started", execUrl);
 
   // 8. Automated checks run, then the human-confirmation gate
-  await page.getByText("Review before signing").waitFor({ timeout: 300_000 });
-  await page.screenshot({ path: path.join(SHOTS, "execution-review.png"), fullPage: true });
-  await page.getByRole("button", { name: /I have reviewed this/ }).click();
+  // The review opens as a floating popup next to the step list (not inline above it).
+  const review = page.getByRole("dialog", { name: "Review before signing" });
+  await review.waitFor({ timeout: 300_000 });
+  await page.getByRole("heading", { name: "Steps" }).waitFor(); // still visible beside the popup
+  await page.waitForTimeout(400); // let the entrance animation finish
+  await page.screenshot({ path: path.join(SHOTS, "execution-review.png") });
+  // It can be minimized to a pill and restored.
+  await review.getByRole("button", { name: "Minimize" }).click();
+  await review.waitFor({ state: "detached" });
+  await page.getByRole("button", { name: /Review before signing/ }).click();
+  await review.getByRole("button", { name: /I have reviewed this/ }).click();
 
   // 9. Wallet step: wrong network → switch → sign
-  await page.getByText("Wallet approval required").waitFor();
-  await page.getByText("Wrong network in wallet").waitFor();
-  await page.getByRole("button", { name: "Switch wallet to Local Hardhat" }).first().click();
-  await page.getByRole("button", { name: "Sign & deploy with wallet" }).click();
+  const walletDock = page.getByRole("dialog", { name: "Wallet approval required" });
+  await walletDock.waitFor();
+  await walletDock.getByText("Wrong network in wallet").waitFor();
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: path.join(SHOTS, "execution-wallet.png") });
+  await walletDock.getByRole("button", { name: "Switch wallet to Local Hardhat" }).click();
+  await walletDock.getByRole("button", { name: "Sign & deploy with wallet" }).click();
   await page.getByText(/deployed and confirmed on Local Hardhat/).waitFor({ timeout: 180_000 });
   await page.screenshot({ path: path.join(SHOTS, "execution-success.png"), fullPage: true });
 

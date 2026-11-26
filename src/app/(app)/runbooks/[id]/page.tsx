@@ -266,7 +266,7 @@ function Editor({ bundle, reload }: { bundle: Bundle; reload: () => Promise<void
                   </div>
                 )}
                 {targetArtifact && def.target && (
-                  <ArgsForm abi={targetArtifact.abi} values={def.target.constructorArgs} onChange={(v) => setDef({ ...def, target: { ...def.target!, constructorArgs: v } })} />
+                  <ArgsForm abi={targetArtifact.abi} values={def.target.constructorArgs} onChange={(v) => setDef({ ...def, target: { ...def.target!, constructorArgs: v } })} network={def.network} />
                 )}
               </div>
             </Card>

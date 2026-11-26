@@ -1,6 +1,7 @@
 import "server-only";
 import { formatEther, isAddress, isHash } from "viem";
-import { parseConstructorArgs, toJsonSafe } from "@/lib/abi-args";
+import { collectQieNames, parseConstructorArgs, toJsonSafe } from "@/lib/abi-args";
+import { resolveQieName } from "../qie-id";
 import { explorerAddressUrl, explorerTxUrl, getNetwork, isDeploymentAllowed, type NetworkId } from "@/lib/networks";
 import { parsePragmas } from "@/lib/project/detect";
 import type { RunbookDefinition, RunbookStep } from "@/lib/runbook/schema";
@@ -67,6 +68,7 @@ function emptyContext(): ExecutionContext {
     testRunId: null,
     contractName: null,
     constructorArgs: null,
+    qieNames: null,
     prepared: null,
     txHash: null,
     deploymentId: null,
@@ -496,7 +498,24 @@ const EXECUTORS: Record<StepType, Executor> = {
     const contracts = await store.list("contracts", { where: { buildId } });
     const artifact = contracts.find((c) => c.name === target.contract && (!target.source || c.sourcePath === target.source));
     if (!artifact) return { status: "failed", summary: `“${target.contract}” is not in build ${buildId.slice(0, 8)}.`, error: "Check the target contract name." };
-    const parsed = parseConstructorArgs(artifact.abi, target.constructorArgs);
+    // QIE IDs (name.qie) in address arguments are resolved here, once, on the
+    // deployment's network. The result is pinned in the execution context, so
+    // a name repointed later cannot change what is prepared, reviewed and signed.
+    const names = collectQieNames(artifact.abi, target.constructorArgs);
+    const qieNames: Record<string, `0x${string}`> = {};
+    for (const name of names) {
+      let address: `0x${string}` | null;
+      try {
+        address = await resolveQieName(name, execution.network);
+      } catch (e) {
+        return { status: "failed", summary: `Could not look up ${name}.`, error: (e as Error).message };
+      }
+      if (!address) {
+        return { status: "failed", summary: `${name} is not registered on ${getNetwork(execution.network).name}.`, error: `No address is set for ${name}. Check the spelling, or use a 0x address.` };
+      }
+      qieNames[name] = address;
+    }
+    const parsed = parseConstructorArgs(artifact.abi, target.constructorArgs, { names: qieNames });
     if (!parsed.ok) {
       return {
         status: "failed",
@@ -505,11 +524,12 @@ const EXECUTORS: Record<StepType, Executor> = {
       };
     }
     const shown = parsed.values.map((v) => String(toJsonSafe(v))).join(", ");
+    const resolvedText = names.length ? ` QIE ID${names.length > 1 ? "s" : ""}: ${names.map((n) => `${n} → ${qieNames[n]}`).join(", ")}.` : "";
     return {
       status: "succeeded",
-      summary: `${artifact.name}(${shown}) — ${parsed.values.length} argument(s) type-checked.`,
-      output: { contract: artifact.fullyQualifiedName, args: toJsonSafe(parsed.values) as unknown[] },
-      context: { contractName: artifact.name, constructorArgs: toJsonSafe(parsed.values) as unknown[], buildId },
+      summary: `${artifact.name}(${shown}) — ${parsed.values.length} argument(s) type-checked.${resolvedText}`,
+      output: { contract: artifact.fullyQualifiedName, args: toJsonSafe(parsed.values) as unknown[], ...(names.length ? { qieNames } : {}) },
+      context: { contractName: artifact.name, constructorArgs: toJsonSafe(parsed.values) as unknown[], buildId, qieNames: names.length ? qieNames : null },
     };
   },
 
@@ -522,8 +542,17 @@ const EXECUTORS: Record<StepType, Executor> = {
       (c) => c.name === target.contract && (!target.source || c.sourcePath === target.source),
     );
     if (!artifact) return { status: "failed", summary: "Compiled artifact not found.", error: "Re-run compilation." };
-    const parsed = parseConstructorArgs(artifact.abi, target.constructorArgs);
-    if (!parsed.ok) return { status: "failed", summary: "Constructor arguments are invalid.", error: parsed.errors[0].message };
+    // Use only the QIE IDs pinned by deploy.validate-args; never resolve again here.
+    const pinned = execution.context.qieNames ?? undefined;
+    const parsed = parseConstructorArgs(artifact.abi, target.constructorArgs, { names: pinned });
+    if (!parsed.ok) {
+      const unresolved = parsed.errors.some((e) => e.message.includes("has not been resolved"));
+      return {
+        status: "failed",
+        summary: "Constructor arguments are invalid.",
+        error: unresolved ? `${parsed.errors[0].message} Retry “Validate constructor parameters” to look up QIE IDs.` : parsed.errors[0].message,
+      };
+    }
     const network = getNetwork(execution.network);
     try {
       const { prepared, warnings } = await prepareDeployment({
@@ -540,7 +569,7 @@ const EXECUTORS: Record<StepType, Executor> = {
         status: warnings.length ? "warning" : "succeeded",
         summary: `Transaction prepared · gas limit ${prepared.gas} · max cost ≈ ${cost}.`,
         output: { gas: prepared.gas, estimatedCostWei: prepared.estimatedCostWei, balanceWei: prepared.balanceWei, dataBytes: (prepared.data.length - 2) / 2 },
-        context: { prepared },
+        context: { prepared: { ...prepared, qieNames: pinned ?? null } },
       };
     } catch (e) {
       return { status: "failed", summary: "Could not prepare the deployment.", error: shortError(e) };
@@ -674,6 +703,8 @@ const EXECUTORS: Record<StepType, Executor> = {
         lines.push(`- **Address:** ${ctx.contractAddress}${explorerAddressUrl(network, ctx.contractAddress) ? ` — ${explorerAddressUrl(network, ctx.contractAddress)}` : ""}`);
       }
       lines.push(`- **Constructor arguments:** \`${JSON.stringify(ctx.prepared?.constructorArgs ?? [])}\``);
+      const qn = ctx.prepared?.qieNames ?? ctx.qieNames;
+      if (qn && Object.keys(qn).length) lines.push(`- **QIE IDs:** ${Object.entries(qn).map(([n, addr]) => `${n} → \`${addr}\``).join(", ")}`);
     }
     const report = lines.join("\n");
     return { status: "succeeded", summary: "Report generated.", context: { report } };

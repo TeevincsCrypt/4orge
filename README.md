@@ -44,6 +44,7 @@ Shipping a contract usually means juggling many tools: a Solidity toolchain, com
 | **Runbooks** | A versioned JSON/YAML workflow format with an explicit allowlist of steps: validate → network check → compile → test → validate args → prepare → human confirmation → wallet signature → on-chain confirmation → record → verify → report. Create, reorder, save, import/export, run, retry and audit them. |
 | **Deployment** | Builds the deployment transaction, estimates gas, checks the balance and shows a full summary. Your wallet signs it. 4ORGE **independently validates the receipt from the chain** (sender, creation code, status, deployed code) before recording success. |
 | **History & contracts** | A permanent, searchable record of every deployment with explorer links, gas data, constructor arguments and verification status. |
+| **QIE ID** | Address arguments take a `0x…` address **or a QIE ID** (`name.qie`). Names are previewed as you type, then looked up once on the deployment's network through QIE's official resolver and **pinned**: the review shows `name.qie → 0x…`, and only that address is encoded and signed. |
 | **Networks** | QIE Testnet (default) and QIE Mainnet. The chain ID is verified live via `eth_chainId`, wallet/network mismatches are detected, one-click switching is available, and you can set a custom RPC. |
 | **API** | A versioned REST API (`/api/v1`). The 4ORGE UI itself uses it. |
 
@@ -124,6 +125,7 @@ Copy `.env.example` to `.env.local` and fill in only what you need. Everything i
 | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `FORGE_SESSION_SECRET` | GitHub OAuth for importing **private** repositories. Public repositories work without these. |
 | `FORGE_TEST_RUNNER` | `all` (default in local mode), `solidity` (default in Supabase mode) or `disabled`. |
 | `FORGE_ENABLE_LOCAL_CHAIN` | Shows the *Local Hardhat* network (chain 31337). |
+| `FORGE_QIE_ID_RESOLVER_URL` | Optional. QIE ID resolver endpoint (default: QIE's official `https://mcp.qie.digital/mcp`). Must be `https`, or `http` on localhost. |
 | `FORGE_ENABLE_MAINNET_DEPLOYMENTS` | **Off by default.** Mainnet deployments stay locked until the owner deliberately enables this. When on, every Mainnet deployment still needs a review step and a typed **MAINNET** confirmation. |
 
 See the [deployment guide](docs/deployment-guide.md) for hosting.

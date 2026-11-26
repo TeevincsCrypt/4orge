@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>4ORGE Whitepaper</title>
+<style>
+@font-face{font-family:G;src:url(../../node_modules/geist/dist/fonts/geist-sans/Geist-Regular.woff2);font-weight:400}
+@font-face{font-family:G;src:url(../../node_modules/geist/dist/fonts/geist-sans/Geist-Medium.woff2);font-weight:500}
+@font-face{font-family:G;src:url(../../node_modules/geist/dist/fonts/geist-sans/Geist-SemiBold.woff2);font-weight:600}
+@font-face{font-family:G;src:url(../../node_modules/geist/dist/fonts/geist-sans/Geist-Bold.woff2);font-weight:700}
+@font-face{font-family:M;src:url(../../node_modules/geist/dist/fonts/geist-mono/GeistMono-Regular.woff2);font-weight:400}
+@font-face{font-family:M;src:url(../../node_modules/geist/dist/fonts/geist-mono/GeistMono-Medium.woff2);font-weight:500}
+:root{--ink:#16161d;--muted:#5d6070;--faint:#8b8d9a;--line:#e3e3ec;--soft:#f4f4f9;--brand:#3d89e9;--accent:#2a6fcc;--ok:#1f9d63;--warn:#b7791f;--bad:#c8322b;--graphite:#2b2d33}
+@page{size:A4;margin:22mm 20mm 20mm 20mm}
+@page:first{margin:0}
+*{box-sizing:border-box}
+html{font-family:G,system-ui,sans-serif;color:var(--ink);font-size:10.2pt;line-height:1.55;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{margin:0}
+h1,h2,h3{font-weight:600;letter-spacing:-.015em;line-height:1.2;color:var(--ink)}
+h2{font-size:17pt;margin:0 0 8pt;padding-top:2pt;break-after:avoid}
+h2 .n{color:var(--brand);font-family:M;font-weight:500;font-size:11pt;margin-right:8pt;vertical-align:2pt}
+h3{font-size:11.5pt;margin:14pt 0 4pt;break-after:avoid}
+p{margin:0 0 7pt}
+ul,ol{margin:0 0 8pt;padding-left:16pt}
+li{margin:0 0 3pt}
+code,.mono{font-family:M,monospace;font-size:.88em}
+code{background:var(--soft);border:1px solid var(--line);border-radius:4px;padding:0 3pt}
+a{color:var(--accent);text-decoration:none}
+section{break-before:page}
+section.cont{break-before:auto;margin-top:16pt}
+.lead{font-size:11.2pt;color:#3a3c48}
+.muted{color:var(--muted)}
+table{width:100%;border-collapse:collapse;margin:6pt 0 10pt;font-size:9.2pt;break-inside:avoid}
+th,td{text-align:left;vertical-align:top;padding:5pt 7pt;border-bottom:1px solid var(--line)}
+th{font-weight:600;background:var(--soft);font-size:8.6pt;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+td code{white-space:nowrap}
+.callout{border:1px solid #cfe0f7;background:#f2f7fe;border-radius:10px;padding:9pt 12pt;margin:8pt 0 10pt;break-inside:avoid}
+.callout.ok{border-color:#bfe6cf;background:#f0f9f4}
+.callout b{color:var(--ink)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8pt;margin:10pt 0 12pt;break-inside:avoid}
+.kpi{border:1px solid var(--line);border-radius:10px;padding:9pt 10pt;background:#fff}
+.kpi .v{font-size:17pt;font-weight:700;letter-spacing:-.02em;color:var(--brand)}
+.kpi .l{font-size:8.4pt;color:var(--muted);line-height:1.35}
+.fig{margin:8pt 0 12pt;break-inside:avoid}
+.fig img{width:100%;border:1px solid var(--line);border-radius:8px;display:block}
+.fig .cap{font-size:8.4pt;color:var(--faint);margin-top:4pt}
+pre{font-family:M,monospace;font-size:8.3pt;line-height:1.5;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:9pt 11pt;margin:6pt 0 10pt;white-space:pre-wrap;break-inside:avoid}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14pt}
+.tag{display:inline-block;font-size:7.6pt;font-weight:600;border-radius:999px;padding:1pt 6pt;vertical-align:1pt}
+.t-auto{background:#eef0f4;color:#535764}.t-build{background:#e5eefc;color:#2360b8}.t-human{background:#fdf1dc;color:#8a5a12}.t-wallet{background:#fbe4ec;color:#a92f53}
+
+/* cover */
+.cover{height:297mm;width:210mm;position:relative;overflow:hidden;background:#f3f3f9;break-after:page}
+.cover .glow{position:absolute;width:150mm;height:150mm;border-radius:50%;right:-40mm;top:-50mm;background:radial-gradient(circle,rgba(61,137,233,.28),rgba(61,137,233,0) 65%)}
+.cover .glow2{position:absolute;width:130mm;height:130mm;border-radius:50%;left:-45mm;bottom:-45mm;background:radial-gradient(circle,rgba(246,200,220,.55),rgba(246,200,220,0) 65%)}
+.cover .dots{position:absolute;inset:0;background-image:radial-gradient(#c9c9d6 .6pt,transparent .8pt);background-size:7mm 7mm;opacity:.6}
+.cover .in{position:absolute;inset:26mm 22mm}
+.cover .lock{display:flex;align-items:center;gap:10pt;font-weight:600;font-size:17pt;letter-spacing:.06em}
+.cover .lock img{height:26pt}
+.cover .eyebrow{margin-top:62mm;font-size:9pt;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+.cover h1{font-size:34pt;line-height:1.08;margin:10pt 0 14pt;letter-spacing:-.03em;max-width:150mm}
+.cover h1 em{font-style:normal;color:var(--brand)}
+.cover .sub{font-size:12.5pt;color:#454857;max-width:140mm;line-height:1.5}
+.cover .meta{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-between;font-size:9pt;color:var(--muted);border-top:1px solid #dcdce8;padding-top:9pt}
+.cover .proof{margin-top:16mm;display:inline-flex;align-items:center;gap:8pt;background:#fff;border:1px solid #bfe6cf;border-radius:999px;padding:6pt 12pt;font-size:9.4pt;color:#1f7a4d;font-weight:500}
+.toc{columns:2;column-gap:16pt;font-size:10pt;margin-top:6pt}
+.toc div{display:flex;gap:7pt;margin-bottom:4pt;break-inside:avoid}
+.toc .n{font-family:M;color:var(--brand);width:16pt}
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="dots"></div><div class="glow"></div><div class="glow2"></div>
+  <div class="in">
+    <div class="lock"><img src="../../public/brand/4orge-mark.svg" alt=""><span><span style="color:#2b2d33">4</span><span style="color:#3d89e9">ORGE</span></span></div>
+    <div class="eyebrow">Whitepaper · Version 1.0</div>
+    <h1>Verifiable smart-contract deployment for <em>QIE Blockchain</em></h1>
+    <p class="sub">A single workspace to compile, test, review and deploy Solidity contracts to QIE through reusable, validated Runbooks, where your wallet signs and every result is checked against the chain.</p>
+    <div class="proof">✓ Live on QIE Mainnet · source-verified on mainnet.qie.digital</div>
+    <div class="meta"><span>QIE Blockchain Hackathon 3.0 · Developer Infrastructure</span><span>November 2026</span><span>4orge-production.up.railway.app</span></div>
+  </div>
+</div>
+
+<!-- ABSTRACT + TOC -->
+<section style="break-before:auto">
+  <h2>Abstract</h2>
+  <p class="lead">Deploying a smart contract is still assembled by hand from compilers, package managers, test runners, RPC endpoints, wallets, scripts, explorers and spreadsheets. Each hand-off is a chance to deploy the wrong code, to the wrong network, with the wrong arguments, or without tests.</p>
+  <p>4ORGE (pronounced <i>Forge</i>) is developer infrastructure for QIE Blockchain that replaces that pipeline with one guided, repeatable workflow. Projects come from templates, uploads or GitHub, and are analysed without ever executing their configuration. Contracts are compiled with integrity-checked official Solidity builds and tested with Hardhat 3 in a sandbox. Every deployment runs as a <b>Runbook</b>: a strict, versioned workflow made only of allowlisted steps, with no "run a command" step. It stops for exactly two things a person must do: <b>review</b> and <b>sign in their own wallet</b>. 4ORGE never sees a private key. After the wallet broadcasts, the server independently fetches the transaction and receipt from QIE and accepts the deployment only if the on-chain data matches what was reviewed, byte for byte.</p>
+  <p>4ORGE is built for QIE specifically: chain IDs are verified live, multiple RPC endpoints are tried with chain-ID proof, source code is verified on QIE's explorer, Mainnet is locked behind explicit operator opt-in and a typed confirmation, and address arguments accept <b>QIE ID</b> names (<code>name.qie</code>), resolved once and pinned. The system is live, and its first real deployment, <b>AtlasGovernor</b>, is on QIE Mainnet with verified source.</p>
+
+  <div class="kpis">
+    <div class="kpi"><div class="v">13</div><div class="l">allowlisted Runbook step types, with no command execution</div></div>
+    <div class="kpi"><div class="v">5</div><div class="l">on-chain checks before a deployment counts as a success</div></div>
+    <div class="kpi"><div class="v">0</div><div class="l">private keys or seed phrases ever requested or stored</div></div>
+    <div class="kpi"><div class="v">105</div><div class="l">automated tests: 90 unit, 14 integration, 1 end-to-end</div></div>
+  </div>
+
+  <h3>Contents</h3>
+  <div class="toc">
+    <div><span class="n">1</span>The problem</div>
+    <div><span class="n">2</span>Design principles</div>
+    <div><span class="n">3</span>System architecture</div>
+    <div><span class="n">4</span>Projects and untrusted input</div>
+    <div><span class="n">5</span>Compilation</div>
+    <div><span class="n">6</span>Sandboxed testing</div>
+    <div><span class="n">7</span>Runbooks</div>
+    <div><span class="n">8</span>Deployment and receipt validation</div>
+    <div><span class="n">9</span>QIE integration and QIE ID</div>
+    <div><span class="n">10</span>Security model</div>
+    <div><span class="n">11</span>Data, privacy and auditability</div>
+    <div><span class="n">12</span>Validation and results</div>
+    <div><span class="n">13</span>Roadmap</div>
+    <div><span class="n">14</span>Conclusion and links</div>
+  </div>
+</section>
+
+<!-- 1 PROBLEM -->
+<section>
+  <h2><span class="n">01</span>The problem</h2>
+  <p>A typical EVM release requires a developer to assemble and trust a chain of independent tools:</p>
+  <ul>
+    <li><b>Toolchain setup:</b> the right Solidity compiler version, framework, and dependencies such as OpenZeppelin, installed with package managers that run arbitrary install scripts.</li>
+    <li><b>Testing:</b> run in a terminal, with no guarantee that what was tested is what gets deployed.</li>
+    <li><b>Network configuration:</b> an RPC URL and chain ID copied from documentation; a wrong value silently targets the wrong chain.</li>
+    <li><b>Deployment scripts:</b> written or copied per project, often holding a private key in an environment file.</li>
+    <li><b>Confirmation:</b> a transaction hash scrolls past; success is assumed rather than verified.</li>
+    <li><b>Record-keeping:</b> addresses pasted into spreadsheets or chat, with no link to the code, arguments or compiler that produced them.</li>
+  </ul>
+  <p>The costs are concrete: deploying untested code, using wrong constructor arguments (owners, supplies), targeting the wrong network, losing track of what is deployed where, and exposing keys. For developers new to QIE, assembling this toolchain is the largest barrier to shipping anything at all.</p>
+  <div class="callout"><b>Goal.</b> Make the safe path the easy path: one workspace where every deployment is reviewed, repeatable, recorded and verified against the chain, with keys that never leave the user's wallet.</div>
+
+  <section class="cont">
+  <h2><span class="n">02</span>Design principles</h2>
+  <table>
+    <tr><th style="width:30%">Principle</th><th>What it means in 4ORGE</th></tr>
+    <tr><td><b>No keys, ever</b></td><td>4ORGE never asks for, stores or sees a seed phrase or private key. Every transaction is signed in the user's wallet (MetaMask, Rabby) through EIP-1193/EIP-6963.</td></tr>
+    <tr><td><b>Verify, don't trust</b></td><td>A transaction hash is a pointer, not proof. Success is recorded only after the server re-reads the transaction and receipt from QIE and they match what was prepared.</td></tr>
+    <tr><td><b>Imported code is untrusted</b></td><td>Configuration files are parsed as text and never executed; paths are validated against traversal; dependencies are integrity-checked and only Solidity files are extracted.</td></tr>
+    <tr><td><b>Declarative, allowlisted workflows</b></td><td>Runbooks can only use a fixed set of operations. There is no step that runs a command, so a shared Runbook cannot execute code.</td></tr>
+    <tr><td><b>Humans decide, machines check</b></td><td>Everything that can be automated is (compile, test, type-check, gas); the workflow stops only for review and signature.</td></tr>
+    <tr><td><b>QIE-native</b></td><td>QIE networks, chain IDs, RPC endpoints, explorer and QIE ID are first-class, not generic EVM settings.</td></tr>
+    <tr><td><b>Honest status</b></td><td>Nothing is faked: no simulated transactions, balances, verifications or test results. Unsupported features are labelled as such.</td></tr>
+  </table>
+  </section>
+</section>
+
+<!-- 3 ARCHITECTURE -->
+<section>
+  <h2><span class="n">03</span>System architecture</h2>
+  <p>4ORGE is a Next.js 16 application with a versioned REST API (<code>/api/v1</code>) that the interface itself uses. Server-side services own all state transitions; the browser owns only the wallet.</p>
+  <div class="fig">
+    <svg viewBox="0 0 760 360" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="G, sans-serif" font-size="11">
+      <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#8b8d9a"/></marker></defs>
+      <rect x="10" y="10" width="740" height="64" rx="12" fill="#fff" stroke="#e3e3ec"/>
+      <text x="26" y="32" font-weight="600" font-size="12">Browser</text>
+      <rect x="26" y="40" width="300" height="24" rx="7" fill="#f4f4f9"/><text x="38" y="56">UI pages · Runbook console · review popup</text>
+      <rect x="340" y="40" width="396" height="24" rx="7" fill="#fbe4ec"/><text x="352" y="56" fill="#a92f53" font-weight="600">Wallet (EIP-6963): the only place a transaction is signed</text>
+      <line x1="200" y1="76" x2="200" y2="104" stroke="#8b8d9a" marker-end="url(#ar)"/><text x="208" y="94" fill="#5d6070">/api/v1 (same-origin, zod-validated)</text>
+      <line x1="520" y1="76" x2="520" y2="304" stroke="#a92f53" stroke-dasharray="4 3" marker-end="url(#ar)"/><text x="527" y="96" fill="#a92f53">signed tx → QIE</text>
+      <rect x="10" y="106" width="500" height="186" rx="12" fill="#f2f7fe" stroke="#cfe0f7"/>
+      <text x="26" y="128" font-weight="600" font-size="12">4ORGE server (Node.js)</text>
+      <rect x="26" y="138" width="230" height="40" rx="8" fill="#fff" stroke="#cfe0f7"/><text x="38" y="155" font-weight="600">Runbook engine</text><text x="38" y="170" fill="#5d6070">server-authoritative state machine</text>
+      <rect x="266" y="138" width="230" height="40" rx="8" fill="#fff" stroke="#cfe0f7"/><text x="278" y="155" font-weight="600">Project detection</text><text x="278" y="170" fill="#5d6070">configs read as text, never run</text>
+      <rect x="26" y="186" width="150" height="40" rx="8" fill="#fff" stroke="#cfe0f7"/><text x="38" y="203" font-weight="600">Compiler worker</text><text x="38" y="218" fill="#5d6070">soljson, isolated process</text>
+      <rect x="186" y="186" width="150" height="40" rx="8" fill="#fff" stroke="#cfe0f7"/><text x="198" y="203" font-weight="600">Test sandbox</text><text x="198" y="218" fill="#5d6070">Hardhat 3 / EDR</text>
+      <rect x="346" y="186" width="150" height="40" rx="8" fill="#fff" stroke="#cfe0f7"/><text x="358" y="203" font-weight="600">Chain access</text><text x="358" y="218" fill="#5d6070">viem, receipt checks</text>
+      <rect x="26" y="234" width="470" height="44" rx="8" fill="#fff" stroke="#cfe0f7"/><text x="38" y="252" font-weight="600">DataStore interface</text><text x="38" y="268" fill="#5d6070">Supabase (Postgres + Row Level Security, user JWT) · or local single-user mode</text>
+      <rect x="530" y="106" width="220" height="186" rx="12" fill="#fff" stroke="#e3e3ec"/>
+      <text x="546" y="128" font-weight="600" font-size="12">Integrity-checked inputs</text>
+      <text x="546" y="150" fill="#5d6070">npm registry (SHA-512)</text>
+      <text x="546" y="168" fill="#5d6070">soljson builds (SHA-512 / SHA-256)</text>
+      <text x="546" y="186" fill="#5d6070" font-size="10.5">forge-std (pinned commit, content hash)</text>
+      <text x="546" y="204" fill="#5d6070">GitHub tarballs (streamed, filtered)</text>
+      <line x1="510" y1="200" x2="528" y2="200" stroke="#8b8d9a" marker-end="url(#ar)"/>
+      <rect x="10" y="306" width="740" height="46" rx="12" fill="#f0f9f4" stroke="#bfe6cf"/>
+      <text x="26" y="326" font-weight="600" font-size="12" fill="#1f7a4d">QIE Blockchain</text>
+      <text x="26" y="342" fill="#3e6f55">Testnet 1983 · Mainnet 1990 · RPC endpoints (chain-ID verified) · Blockscout explorer · QIE ID resolver</text>
+      <line x1="420" y1="294" x2="420" y2="304" stroke="#8b8d9a" marker-end="url(#ar)"/>
+    </svg>
+    <div class="cap">Figure 1. Components and trust boundaries. Signing happens only in the browser wallet; all verification happens on the server against QIE.</div>
+  </div>
+  <h3>Technology</h3>
+  <ul>
+    <li><b>Frontend:</b> Next.js 16 (App Router), TypeScript, Tailwind CSS 4, a light responsive design system.</li>
+    <li><b>Blockchain:</b> viem for RPC, encoding and wallet clients; EIP-1193/EIP-6963 wallet discovery; EIP-3085/3326 network add/switch.</li>
+    <li><b>Build and test:</b> official <code>soljson</code> Solidity compilers; Hardhat 3 with EDR and the viem toolbox; a safe npm Solidity resolver.</li>
+    <li><b>Data:</b> Supabase (Postgres, Row Level Security, email and GitHub sign-in) or a zero-configuration local mode.</li>
+    <li><b>Hosting:</b> any Node.js server with a persistent disk; the reference deployment runs on Railway.</li>
+  </ul>
+</section>
+
+<!-- 4 PROJECTS + 5 COMPILATION -->
+<section>
+  <h2><span class="n">04</span>Projects and untrusted input</h2>
+  <p>Projects can start from a template (Counter, ERC-20, OpenZeppelin ERC-20, blank), be uploaded as a Hardhat or Foundry folder, or be imported from a public or private GitHub repository. All three paths treat the code as untrusted:</p>
+  <ul>
+    <li><b>Static detection.</b> <code>hardhat.config.*</code>, <code>foundry.toml</code>, <code>remappings.txt</code> and <code>package.json</code> are read as text to find the compiler version, optimizer, EVM target, remappings, dependencies and tests. Running a project's Hardhat config would mean executing arbitrary code on the server, so it never happens. Configs in a subfolder (for example a monorepo's <code>contracts/foundry.toml</code>) are found and their paths rebased.</li>
+    <li><b>Path safety.</b> Every path is normalised and rejected if absolute or containing <code>..</code>; only source, test and config file types are stored, with per-file and per-project size limits.</li>
+    <li><b>Streaming import.</b> GitHub archives are streamed through the tar parser and only project files are kept, so a repository with large assets (up to 1 GB) costs download time, not memory or disk. Only regular files are read; symlinks and devices are skipped.</li>
+  </ul>
+
+  <section class="cont">
+  <h2><span class="n">05</span>Compilation</h2>
+  <ol>
+    <li><b>Resolve sources.</b> Imports are followed through relative paths, remappings and project files, then npm packages. Packages are fetched from the npm registry and verified against their <b>SHA-512 integrity</b>; only <code>.sol</code> and <code>package.json</code> files are extracted and no install script runs. forge-std, whose npm release is stale, comes from a <b>pinned GitHub commit checked against a content hash</b>.</li>
+    <li><b>Choose the compiler.</b> The configured version if it satisfies every pragma, otherwise the newest release satisfying all of them. Official builds are integrity-checked and cached.</li>
+    <li><b>Compile in isolation.</b> A separate Node process with a timeout, memory cap and scrubbed environment receives all sources up front, so the compiler never touches the filesystem. Large inputs are passed on the WebAssembly heap rather than its small stack, which removes a class of "memory access out of bounds" crashes on big Foundry test suites.</li>
+    <li><b>Record everything.</b> Errors, warnings, ABIs, bytecode and the exact Standard JSON input are stored. The same input is later used for explorer verification, so the verified bytecode matches.</li>
+  </ol>
+  </section>
+</section>
+
+<!-- 6 TESTING + 7 RUNBOOKS -->
+<section>
+  <h2><span class="n">06</span>Sandboxed testing</h2>
+  <p>Tests run with Hardhat 3 in a throw-away sandbox that 4ORGE builds for each run:</p>
+  <ul>
+    <li>4ORGE writes its <b>own</b> Hardhat configuration; the project's config is never executed. The compiler is the same cached build used for compilation.</li>
+    <li><code>node_modules</code> links to a pinned runner toolchain and the integrity-checked packages. Hardhat runs with a timeout, heap cap, output cap, private <code>HOME</code> and no server secrets; the sandbox is deleted afterwards.</li>
+    <li><b>Solidity tests</b> (<code>*.t.sol</code>, including Foundry-style forge-std suites with fuzz and invariant tests) execute inside the EVM and cannot touch the host. <b>TypeScript tests</b> are real code and run only where the operator allows it.</li>
+    <li>File access declared in <code>foundry.toml</code> (<code>fs_permissions</code>, for <code>vm.readFile</code> and similar) is honoured inside the sandbox, but write access is never granted to the sandbox root or library folders, which link to shared caches.</li>
+    <li>Results are parsed into per-test records (name, status, duration, failure message). A Runbook can require tests to pass before anything is deployed.</li>
+  </ul>
+
+  <section class="cont">
+  <h2><span class="n">07</span>Runbooks</h2>
+  <p>A Runbook is a declarative workflow in the strict <code>4orge.runbook/v1</code> format, editable visually and exportable as JSON or YAML. Every deployment, including the one-click wizard, runs as a Runbook, so each one can be inspected, repeated and audited.</p>
+<pre>schema: 4orge.runbook/v1
+name: Deploy Vault to QIE Mainnet
+network: qie-mainnet
+target: { contract: Vault, source: contracts/Vault.sol, constructorArgs: [ "alice.qie", "1000" ] }
+steps:
+  - { id: load,    uses: project.load }          - { id: confirm, uses: human.confirm }
+  - { id: network, uses: network.check }         - { id: sign,    uses: wallet.deploy }
+  - { id: compile, uses: contracts.compile }     - { id: receipt, uses: tx.confirm }
+  - { id: test,    uses: contracts.test }        - { id: record,  uses: deployment.record }
+  - { id: args,    uses: deploy.validate-args }  - { id: verify,  uses: contract.verify }
+  - { id: prepare, uses: deploy.prepare }        - { id: report,  uses: report.generate }</pre>
+  <table>
+    <tr><th style="width:30%">Step</th><th style="width:18%">Category</th><th>Responsibility</th></tr>
+    <tr><td><code>project.load</code>, <code>project.validate</code></td><td><span class="tag t-auto">Automated</span></td><td>Snapshot files and structure; check sources, compiler and target.</td></tr>
+    <tr><td><code>network.check</code></td><td><span class="tag t-auto">Automated</span></td><td><code>eth_chainId</code> must match; locked networks fail here.</td></tr>
+    <tr><td><code>contracts.compile</code>, <code>contracts.test</code></td><td><span class="tag t-build">Local build</span></td><td>Compile and record the build; run tests (required by default).</td></tr>
+    <tr><td><code>deploy.validate-args</code></td><td><span class="tag t-auto">Automated</span></td><td>Type-check arguments against the ABI; resolve and pin QIE IDs.</td></tr>
+    <tr><td><code>deploy.prepare</code></td><td><span class="tag t-auto">Automated</span></td><td>Encode creation data, estimate gas and fees, check balance.</td></tr>
+    <tr><td><code>human.confirm</code></td><td><span class="tag t-human">Human</span></td><td>Pause for review (typed <b>MAINNET</b> on Mainnet).</td></tr>
+    <tr><td><code>wallet.deploy</code></td><td><span class="tag t-wallet">Wallet</span></td><td>The browser wallet signs and broadcasts. Never run by the server.</td></tr>
+    <tr><td><code>tx.confirm</code>, <code>deployment.record</code></td><td><span class="tag t-auto">Automated</span></td><td>Validate the receipt on-chain; record the deployment.</td></tr>
+    <tr><td><code>contract.verify</code>, <code>report.generate</code></td><td><span class="tag t-auto">Automated</span></td><td>Submit source verification; write a Markdown report.</td></tr>
+  </table>
+  <p><b>Ordering rules</b> enforce safe sequences beyond the schema: dependencies must come earlier, each step type appears once, and a <code>wallet.deploy</code> must be followed by <code>tx.confirm</code> and <code>deployment.record</code>, so a broadcast transaction is always confirmed and recorded. On Mainnet, a Runbook that deploys without a <code>human.confirm</code> step is rejected.</p>
+  <p><b>Execution model.</b> Executions are server-authoritative state machines: clients can only ask the server to advance, confirm, retry, cancel or accept a wallet result, and the server checks that the step is actually waiting for that input. A per-execution lock prevents double execution. Failed steps can be retried when safe; a wallet step can never be retried once a transaction has been broadcast.</p>
+  </section>
+</section>
+
+<!-- 8 DEPLOYMENT -->
+<section>
+  <h2><span class="n">08</span>Deployment and receipt validation</h2>
+  <p>The deployment path is designed so that what the user reviews is exactly what is signed, and what is signed is exactly what is recorded.</p>
+  <ol>
+    <li><b>Prepare.</b> The server encodes the creation data (compiled bytecode plus ABI-encoded constructor arguments), estimates gas and fees, and reads the deployer's balance from the chain.</li>
+    <li><b>Review.</b> A popup shows the contract, network and chain ID, deployer, arguments (with any QIE ID next to its pinned address), gas limit, maximum cost and balance. The step list stays visible while it is open.</li>
+    <li><b>Sign.</b> The wallet is switched to the right network if needed and asked to send exactly the prepared transaction. The hash is saved locally <i>before</i> it is reported and recorded as a <b>pending</b> deployment immediately, so a closed tab cannot lose a broadcast transaction.</li>
+    <li><b>Validate on-chain.</b> The server fetches the transaction and receipt from QIE and accepts the deployment only if all of the checks below hold.</li>
+  </ol>
+  <table>
+    <tr><th style="width:36%">Check</th><th>Why it matters</th></tr>
+    <tr><td>The transaction is a contract creation (<code>to = null</code>)</td><td>A hash of any other transaction cannot be passed off as a deployment.</td></tr>
+    <tr><td>Sender equals the approved deployer</td><td>The account that was reviewed is the account that deployed.</td></tr>
+    <tr><td>Input equals the prepared creation data, byte for byte</td><td>The deployed code and constructor arguments are exactly the reviewed ones.</td></tr>
+    <tr><td>Chain ID matches and receipt status is success</td><td>No cross-chain confusion; reverted deployments are failures.</td></tr>
+    <tr><td>Code exists at the new contract address</td><td>The contract is really there.</td></tr>
+  </table>
+  <div class="callout"><b>Proven, not assumed.</b> The end-to-end test deploys through a real browser and wallet against a real EVM, reads the deployed contract back, and then submits a forged transaction hash. 4ORGE rejects it: "Transaction is not a contract creation."</div>
+  <h3>Mainnet safeguards</h3>
+  <ul>
+    <li>QIE Mainnet deployments are <b>locked by default</b> and require the operator to set <code>FORGE_ENABLE_MAINNET_DEPLOYMENTS=true</code>.</li>
+    <li>A Mainnet Runbook must contain a human review step; the wizard forces it on.</li>
+    <li>The server refuses to confirm the review unless the user types <b>MAINNET</b>; "real funds" warnings appear in the wizard, review and wallet step.</li>
+  </ul>
+</section>
+
+<!-- 9 QIE -->
+<section>
+  <h2><span class="n">09</span>QIE integration and QIE ID</h2>
+  <table>
+    <tr><th style="width:28%">Capability</th><th>Implementation</th></tr>
+    <tr><td><b>Networks</b></td><td>QIE Testnet (chain 1983, default) and QIE Mainnet (chain 1990) are built in; a local Hardhat chain is available for rehearsals.</td></tr>
+    <tr><td><b>Live chain verification</b></td><td><code>eth_chainId</code> is checked before anything is prepared; endpoints reporting another chain are refused.</td></tr>
+    <tr><td><b>RPC resilience</b></td><td>Several QIE RPC endpoints are probed in parallel, each must prove the correct chain ID, and the Network page shows the health and latency of each with plain-language errors.</td></tr>
+    <tr><td><b>Wallet networks</b></td><td>One-click add or switch to QIE networks (EIP-3085/3326) and detection of wallet/network mismatches.</td></tr>
+    <tr><td><b>Explorer verification</b></td><td>The exact Standard JSON input is submitted to QIE's Blockscout-compatible explorer and polled until it reports verified. Verified on mainnet.qie.digital. Explorers without the API are reported as <i>unsupported</i>, never as verified.</td></tr>
+    <tr><td><b>QIE ID</b></td><td>Any address argument can be a <code>name.qie</code>; see below.</td></tr>
+  </table>
+  <h3>QIE ID: human-readable addresses, pinned before signing</h3>
+  <p>QIE ID is QIE's identity layer: names such as <code>alice.qie</code> that point to wallet addresses. In 4ORGE, every constructor argument of type <code>address</code> (including <code>address[]</code> and tuple fields) accepts a <code>0x</code> address or a QIE ID, freely mixed.</p>
+  <ul>
+    <li>The form previews <code>alice.qie → 0x…</code> on the selected network as the user types.</li>
+    <li>The <code>deploy.validate-args</code> step resolves each name <b>once</b> through QIE's official QIE Wallet MCP resolver (tool <code>qie_resolve_name</code>, which reads the QIE ID contracts on chain) and <b>pins</b> the result.</li>
+    <li><code>deploy.prepare</code> encodes only the pinned addresses and never resolves again, so a name repointed mid-deployment cannot change what is reviewed and signed. The review, wallet popup and report all show <code>name.qie → 0x…</code>.</li>
+    <li>Only a well-formed, non-zero address is accepted from the resolver; an outage is an error, never "not registered".</li>
+  </ul>
+</section>
+
+<!-- 10 SECURITY + 11 DATA -->
+<section>
+  <h2><span class="n">10</span>Security model</h2>
+  <table>
+    <tr><th style="width:34%">Threat</th><th>Mitigation</th></tr>
+    <tr><td>Key theft</td><td>No keys are requested, stored or transmitted; signing happens only in the user's wallet.</td></tr>
+    <tr><td>Malicious repository or config</td><td>Configs are parsed as text, never executed; paths validated; only allowed file types stored; archives streamed and filtered.</td></tr>
+    <tr><td>Supply-chain tampering</td><td>npm tarballs verified with SHA-512; compilers with published SHA-512/SHA-256; forge-std pinned to a commit and content hash; no install scripts.</td></tr>
+    <tr><td>Malicious Runbook</td><td>Strict schema and a 13-step allowlist with no command execution; ordering validator; Mainnet requires review.</td></tr>
+    <tr><td>Forged or swapped transaction</td><td>Server-side receipt validation against the prepared transaction (five checks); proven by the forged-hash test.</td></tr>
+    <tr><td>Wrong network</td><td>Live chain-ID checks on every RPC; wallet chain enforced at signing; Mainnet locked by default.</td></tr>
+    <tr><td>Name repointing (QIE ID)</td><td>Resolve once, pin, show in review, never re-resolve during preparation.</td></tr>
+    <tr><td>Resource exhaustion</td><td>Separate processes with timeouts, memory and output caps; server-wide concurrency limit; download caps.</td></tr>
+    <tr><td>Cross-site requests</td><td>Same-origin check on state-changing API calls; security headers; zod-validated, size-limited bodies.</td></tr>
+    <tr><td>Data leakage between users</td><td>Postgres Row Level Security on every table, using the user's own JWT (no service-role key), plus an owner filter in the adapter.</td></tr>
+  </table>
+  <p class="muted">Known limitation: process-level isolation suits single-user and trusted hosting. Multi-tenant hosting that runs untrusted TypeScript tests should place the test worker in a container or VM sandbox; the runner has a single boundary for that.</p>
+
+  <section class="cont">
+  <h2><span class="n">11</span>Data, privacy and auditability</h2>
+  <ul>
+    <li><b>Two storage modes behind one interface:</b> Supabase (multi-user, Postgres with Row Level Security, email and GitHub sign-in) or local mode (single user, data on the owner's machine, loopback-only API).</li>
+    <li><b>Ownership enforced in the database:</b> owner-only policies on every table, and child rows can only reference parents the user owns. Tested against a real Postgres with two users.</li>
+    <li><b>Audit trail:</b> deployment records cannot be deleted and survive project deletion. Each record keeps the network, chain ID, deployer, address, transaction, block, gas, compiler, constructor arguments and verification status, with explorer links.</li>
+    <li><b>GitHub access:</b> an OAuth token stored only in an AES-256-GCM encrypted, httpOnly cookie, never in the browser or the database.</li>
+  </ul>
+  </section>
+</section>
+
+<!-- 12 VALIDATION -->
+<section>
+  <h2><span class="n">12</span>Validation and results</h2>
+  <h3>First QIE Mainnet deployment</h3>
+  <p><b>AtlasGovernor</b>, from a real Foundry monorepo imported from GitHub, was compiled in 4ORGE and deployed to QIE Mainnet through a Runbook (review, typed MAINNET, wallet signature, on-chain validation), then source-verified on QIE's explorer.</p>
+  <table>
+    <tr><td style="width:28%">Contract</td><td><a class="mono" href="https://mainnet.qie.digital/address/0x8b9e799f6bb4b9b120de4293f8482c6112fac366?tab=contract">0x8b9e799f6bb4b9b120de4293f8482c6112fac366</a></td></tr>
+    <tr><td>Transaction</td><td><a class="mono" href="https://mainnet.qie.digital/tx/0xec7eca641f1ce2c3643952ac556eabb03a2e0c758d3b848fde09a6338c0faa55">0xec7eca641f1ce2c3643952ac556eabb03a2e0c758d3b848fde09a6338c0faa55</a></td></tr>
+    <tr><td>Block · Network</td><td>12128375 · QIE Mainnet (chain 1990)</td></tr>
+    <tr><td>Source verification</td><td style="color:#1f7a4d;font-weight:600">Verified on mainnet.qie.digital</td></tr>
+  </table>
+  <div class="fig"><img src="../../docs/screenshots/qie-mainnet-deployment.png" alt=""><div class="cap">Figure 2. The AtlasGovernor deployment record in 4ORGE: Confirmed on QIE Mainnet, source verified.</div></div>
+  <h3>Real-world repositories</h3>
+  <table>
+    <tr><th style="width:34%">Repository</th><th>Result in 4ORGE</th></tr>
+    <tr><td>atlaspad (Foundry monorepo, forge-std, OpenZeppelin)</td><td>Compiles with its own settings (solc 0.8.28, optimizer 200, Cancun); <b>114 / 114 tests pass</b>, including fuzz and invariant tests.</td></tr>
+    <tr><td>amen (Foundry, fork tests, <code>fs_permissions</code>)</td><td><b>90 passed, 0 failed</b>; 2 fork tests skip themselves by design off their target chain.</td></tr>
+  </table>
+  <h3>Automated test suite</h3>
+  <table>
+    <tr><th style="width:24%">Suite</th><th>Coverage</th></tr>
+    <tr><td>90 unit tests</td><td>Runbook schema and ordering, Mainnet safeguards, path safety, ABI argument parsing, QIE ID parsing and resolver handling, project detection, network configuration, compiler selection, RPC errors, storage isolation, archive streaming, file permissions.</td></tr>
+    <tr><td>14 integration tests</td><td>Real compilation (including OpenZeppelin from npm), real Hardhat runs, forge-std from its pinned release, large-input compiler regression, cross-disk caches, QIE ID pinning in real Runbooks.</td></tr>
+    <tr><td>1 end-to-end test</td><td>Real browser and wallet against a real EVM: create, compile, test, Runbook, review popup, network switch, sign, on-chain validation, record, forged-hash rejection.</td></tr>
+    <tr><td>Database tests</td><td>The Supabase migration on a real Postgres: isolation between users, ownership forgery, audit-trail rules.</td></tr>
+  </table>
+  <p>Type checking, linting, the production build and all suites run in CI on every change.</p>
+</section>
+
+<!-- 13 ROADMAP + 14 CONCLUSION -->
+<section>
+  <h2><span class="n">13</span>Roadmap</h2>
+  <ul>
+    <li><b>QIE ID everywhere:</b> show QIE IDs for deployers and contracts in records and the wallet menu (reverse lookup).</li>
+    <li><b>QIE Pass:</b> an optional "verified deployer" badge using QIE Pass partner verification (status only, never personal data).</li>
+    <li><b>Contract console:</b> read and write calls generated from the ABI for deployed contracts.</li>
+    <li><b>Multi-contract Runbooks:</b> deploy and wire several contracts, proxies and post-deploy calls in one reviewed workflow.</li>
+    <li><b>CI and API automation:</b> run Runbooks from GitHub Actions with personal access tokens, keeping the wallet signature as a separate approval.</li>
+    <li><b>Hardened multi-tenant isolation:</b> container-sandboxed test workers and row-level execution locks.</li>
+    <li><b>Deeper Foundry support:</b> profiles, <code>lib/</code> submodules beyond forge-std, and library linking.</li>
+  </ul>
+
+  <section class="cont">
+  <h2><span class="n">14</span>Conclusion</h2>
+  <p class="lead">4ORGE turns deployment on QIE from a chain of trusted tools into a verifiable workflow: untrusted code is analysed, never executed; builds and dependencies are integrity-checked; tests can gate deployments; people review and sign; and the chain itself is the source of truth for success.</p>
+  <p>It is live, it has shipped a real, source-verified contract to QIE Mainnet, and it makes QIE's own identity layer, QIE ID, part of the deployment path. The aim is simple: make the safe way to ship on QIE also the fastest.</p>
+  <table>
+    <tr><td style="width:28%">Live application</td><td><a href="https://4orge-production.up.railway.app">4orge-production.up.railway.app</a></td></tr>
+    <tr><td>Source code (MIT)</td><td><a href="https://github.com/TeevincsCrypt/4orge">github.com/TeevincsCrypt/4orge</a></td></tr>
+    <tr><td>First Mainnet deployment</td><td><a href="https://mainnet.qie.digital/address/0x8b9e799f6bb4b9b120de4293f8482c6112fac366?tab=contract">mainnet.qie.digital/address/0x8b9e…c366</a></td></tr>
+    <tr><td>Built for</td><td>QIE Blockchain Hackathon 3.0 · Developer Infrastructure</td></tr>
+  </table>
+  </section>
+</section>
+</body>
+</html>

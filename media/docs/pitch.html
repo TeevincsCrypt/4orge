@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>4ORGE Pitch Deck</title>
+<style>
+@font-face{font-family:G;src:url(../../node_modules/geist/dist/fonts/geist-sans/Geist-Regular.woff2);font-weight:400}
+@font-face{font-family:G;src:url(../../node_modules/geist/dist/fonts/geist-sans/Geist-Medium.woff2);font-weight:500}
+@font-face{font-family:G;src:url(../../node_modules/geist/dist/fonts/geist-sans/Geist-SemiBold.woff2);font-weight:600}
+@font-face{font-family:G;src:url(../../node_modules/geist/dist/fonts/geist-sans/Geist-Bold.woff2);font-weight:700}
+@font-face{font-family:M;src:url(../../node_modules/geist/dist/fonts/geist-mono/GeistMono-Regular.woff2);font-weight:400}
+@font-face{font-family:M;src:url(../../node_modules/geist/dist/fonts/geist-mono/GeistMono-Medium.woff2);font-weight:500}
+:root{--canvas:#f1f1f7;--ink:#14141b;--graphite:#2b2d33;--muted:#5d606a;--faint:#8a8d96;--line:#e3e3ec;--brand:#3d89e9;--accent:#2a6fcc;--soft:#e8f1fd;--ok:#16924a;--okbg:#e7f6ec;--warn:#b76e00;--warnbg:#fff3df;--bad:#c8322b;--badbg:#fdecea}
+@page{size:1600px 900px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{font-family:G,system-ui,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+.slide{width:1600px;height:900px;position:relative;overflow:hidden;background:var(--canvas);break-after:page}
+.slide:last-child{break-after:auto}
+.slide::before{content:"";position:absolute;inset:0;background-image:radial-gradient(#c9c9d6 1.3px,transparent 1.6px);background-size:30px 30px;opacity:.5;-webkit-mask-image:radial-gradient(ellipse 80% 90% at 75% 35%,#000 25%,transparent 78%);mask-image:radial-gradient(ellipse 80% 90% at 75% 35%,#000 25%,transparent 78%)}
+.slide::after{content:"";position:absolute;width:1000px;height:1000px;right:-360px;top:-420px;border-radius:50%;background:radial-gradient(circle,rgba(61,137,233,.2),rgba(61,137,233,0) 65%)}
+.slide>*{position:relative;z-index:1}
+.top{position:absolute;left:80px;right:80px;top:52px;display:flex;align-items:center;justify-content:space-between;z-index:2}
+.lock{display:flex;align-items:center;gap:14px;font-weight:600;font-size:30px;letter-spacing:.06em}
+.lock img{height:42px}.four{color:var(--graphite)}.orge{color:var(--brand)}
+.num{font-family:M;font-size:19px;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 18px}
+.eyebrow{font-size:19px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1{font-size:76px;line-height:1.04;font-weight:650;letter-spacing:-.03em}
+h1 em,h2 em{font-style:normal;color:var(--brand)}
+h2{font-size:60px;line-height:1.06;font-weight:650;letter-spacing:-.028em}
+.lead{font-size:27px;line-height:1.45;color:var(--muted)}
+.body{position:absolute;left:80px;right:80px;top:140px;bottom:100px;display:flex;flex-direction:column;justify-content:center}
+.card{background:#fff;border:1px solid var(--line);border-radius:26px;box-shadow:0 1px 2px rgba(20,20,27,.04),0 22px 48px -22px rgba(20,20,27,.2)}
+.pill{display:inline-flex;align-items:center;gap:10px;border-radius:999px;font-size:21px;font-weight:500;padding:10px 20px;background:#fff;border:1px solid var(--line);color:var(--graphite)}
+.ic{width:26px;height:26px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ok{color:var(--ok)}
+.foot{position:absolute;left:80px;bottom:46px;font-size:21px;color:var(--faint)}
+.mono{font-family:M,monospace}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+.tile{padding:38px 38px 42px}
+.tile .badge{width:66px;height:66px;border-radius:19px;background:var(--soft);color:var(--accent);display:grid;place-items:center;margin-bottom:20px}
+.tile h3{font-size:34px;font-weight:600;letter-spacing:-.01em;margin-bottom:10px}
+.tile p{font-size:24px;line-height:1.45;color:var(--muted)}
+.shot{border-radius:18px;overflow:hidden}
+.shot img{display:block;width:100%}
+.chrome{height:40px;background:#fbfbfd;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;padding:0 16px}
+.chrome i{width:12px;height:12px;border-radius:50%;background:#e2e2ea;display:block}
+.chrome span{margin-left:14px;font-family:M;font-size:14px;color:var(--faint);background:#f0f0f5;border-radius:8px;padding:4px 12px}
+.check li{list-style:none;display:flex;gap:14px;align-items:center;font-size:27px;color:var(--graphite);margin-bottom:18px}
+.step{background:#fff;border:1px solid var(--line);border-radius:20px;padding:20px 22px;min-height:136px}
+.step .n{font-family:M;font-size:17px;color:var(--faint)}
+.step .t{font-size:25px;font-weight:600;line-height:1.25;margin-top:6px}
+.tag{display:inline-block;font-size:16px;font-weight:600;border-radius:999px;padding:3px 10px;margin-top:10px}
+.auto{background:#eef0f4;color:#535764}.human{background:var(--warnbg);color:var(--warn)}.wallet{background:var(--soft);color:var(--accent)}.chain{background:var(--okbg);color:var(--ok)}
+.hl{border-color:rgba(61,137,233,.55);box-shadow:0 0 0 5px rgba(61,137,233,.1)}
+table{width:100%;border-collapse:collapse;font-size:22px}
+td{padding:15px 22px;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+td.k{color:var(--muted);width:32%}
+.big{font-size:96px;font-weight:700;letter-spacing:-.04em;color:var(--brand);line-height:1}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 9 6 6M15 9l-6 6"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-branch" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="8" r="2.5"/><path d="M6 8.5v7M18 10.5c0 4-6 3-11 6"/></symbol>
+  <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6L4.5 18.5A2 2 0 0 0 6.2 21h11.6a2 2 0 0 0 1.7-2.5L14 9V3"/><path d="M7 15h10"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2V5"/><path d="M17 14h.01"/></symbol>
+  <symbol id="i-id" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2.5"/><path d="M14 10h4M14 14h3"/></symbol>
+  <symbol id="i-net" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.5 3.3-5.5 6.5-5.5s5.9 2 6.5 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M17.5 14.5c2.2.3 3.7 2 4 4.5"/></symbol>
+</svg>
+
+<!-- 1 TITLE -->
+<section class="slide">
+  <div class="top"><div class="lock"><img src="../../public/brand/4orge-mark.svg" alt=""><span><span class="four">4</span><span class="orge">ORGE</span></span></div><div class="num">QIE Blockchain Hackathon 3.0</div></div>
+  <div style="position:absolute;left:80px;top:250px;width:760px">
+    <div class="eyebrow">Developer infrastructure for QIE</div>
+    <h1 style="margin:20px 0 26px">Ship smart contracts on QIE, <em>verified.</em></h1>
+    <p class="lead">Compile, test, review and deploy from one workspace. Your wallet signs. The chain confirms.</p>
+    <div style="margin-top:40px;display:flex;gap:14px;flex-wrap:wrap">
+      <span class="pill" style="color:var(--ok);border-color:#bfe6cf;background:#f0f9f4"><svg class="ic"><use href="#i-check"/></svg>Live on QIE Mainnet · source verified</span>
+    </div>
+  </div>
+  <div class="card shot" style="position:absolute;left:900px;top:190px;width:820px;transform:rotate(-1.5deg)"><div class="chrome"><i></i><i></i><i></i><span>4orge-production.up.railway.app</span></div><img src="../../docs/screenshots/landing.png" alt=""></div>
+</section>
+
+<!-- 2 PROBLEM -->
+<section class="slide">
+  <div class="top"><div class="lock"><img src="../../public/brand/4orge-mark.svg" alt=""><span><span class="four">4</span><span class="orge">ORGE</span></span></div><div class="num">02 · Problem</div></div>
+  <div class="body">
+    <div class="eyebrow">The problem</div>
+    <h2 style="margin:16px 0 40px;max-width:1300px">Shipping a contract means stitching together <em>nine tools</em> and trusting every hand-off.</h2>
+    <div class="grid3">
+      <div class="card tile"><div class="badge" style="background:var(--badbg);color:var(--bad)"><svg class="ic"><use href="#i-x"/></svg></div><h3>Fragile setup</h3><p>Compiler versions, npm installs with arbitrary scripts, test runners and RPC configs, rebuilt for every project.</p></div>
+      <div class="card tile"><div class="badge" style="background:var(--badbg);color:var(--bad)"><svg class="ic"><use href="#i-wallet"/></svg></div><h3>Risky deployment</h3><p>Scripts holding private keys, the wrong network or arguments, untested code. A transaction hash is taken as proof.</p></div>
+      <div class="card tile"><div class="badge" style="background:var(--badbg);color:var(--bad)"><svg class="ic"><use href="#i-list"/></svg></div><h3>No record</h3><p>Addresses pasted into spreadsheets, with no link to the code, compiler or arguments that produced them.</p></div>
+    </div>
+  </div>
+  <div class="foot">For newcomers it's the biggest barrier to building on QIE. For teams, it's lost time and expensive mistakes.</div>
+</section>
+
+<!-- 3 SOLUTION -->
+<section class="slide">
+  <div class="top"><div class="lock"><img src="../../public/brand/4orge-mark.svg" alt=""><span><span class="four">4</span><span class="orge">ORGE</span></span></div><div class="num">03 · Solution</div></div>
+  <div class="body">
+    <div class="eyebrow">The solution</div>
+    <h2 style="margin:16px 0 40px">One workspace. One reviewed workflow. <em>Every deploy verified.</em></h2>
+    <div class="grid3" style="grid-template-columns:repeat(4,1fr)">
+      <div class="card tile"><div class="badge"><svg class="ic"><use href="#i-branch"/></svg></div><h3>Bring code</h3><p>Template, folder upload or GitHub import, analysed without running anything.</p></div>
+      <div class="card tile"><div class="badge"><svg class="ic"><use href="#i-flask"/></svg></div><h3>Build &amp; test</h3><p>Official, checksum-verified Solidity builds; Hardhat 3 tests in a sandbox.</p></div>
+      <div class="card tile"><div class="badge"><svg class="ic"><use href="#i-list"/></svg></div><h3>Runbook</h3><p>A saved workflow from approved steps only. It stops only for your review and signature.</p></div>
+      <div class="card tile"><div class="badge" style="background:var(--okbg);color:var(--ok)"><svg class="ic"><use href="#i-shield"/></svg></div><h3>Verified</h3><p>The receipt is checked on-chain, recorded forever and source-verified on QIE's explorer.</p></div>
+    </div>
+  </div>
+  <div class="foot">No private keys. No scripts to trust. No spreadsheets.</div>
+</section>
+
+<!-- 4 HOW IT WORKS -->
+<section class="slide">
+  <div class="top"><div class="lock"><img src="../../public/brand/4orge-mark.svg" alt=""><span><span class="four">4</span><span class="orge">ORGE</span></span></div><div class="num">04 · How it works</div></div>
+  <div class="body">
+    <div class="eyebrow">Runbooks</div>
+    <h2 style="margin:16px 0 34px">Every deployment is a <em>Runbook.</em></h2>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px">
+      <div class="step"><div class="n">01</div><div class="t">Load &amp; validate</div><span class="tag auto">Automated</span></div>
+      <div class="step"><div class="n">02</div><div class="t">Check chain ID</div><span class="tag auto">Automated</span></div>
+      <div class="step"><div class="n">03</div><div class="t">Compile</div><span class="tag auto">Local build</span></div>
+      <div class="step"><div class="n">04</div><div class="t">Run tests</div><span class="tag auto">Local build</span></div>
+      <div class="step"><div class="n">05</div><div class="t">Check args · QIE ID</div><span class="tag auto">Automated</span></div>
+      <div class="step"><div class="n">06</div><div class="t">Prepare tx &amp; gas</div><span class="tag auto">Automated</span></div>
+      <div class="step hl"><div class="n">07</div><div class="t">Your review</div><span class="tag human">Human</span></div>
+      <div class="step hl"><div class="n">08</div><div class="t">Wallet signs</div><span class="tag wallet">Your wallet</span></div>
+      <div class="step"><div class="n">09</div><div class="t">Receipt validated</div><span class="tag chain">On-chain</span></div>
+      <div class="step"><div class="n">10</div><div class="t">Recorded, verified, reported</div><span class="tag auto">Automated</span></div>
+    </div>
+    <div class="grid3" style="margin-top:36px">
+      <div class="pill" style="justify-content:center"><svg class="ic ok"><use href="#i-check"/></svg>13-step allowlist, no "run command"</div>
+      <div class="pill" style="justify-content:center"><svg class="ic ok"><use href="#i-check"/></svg>Versioned JSON / YAML, reusable</div>
+      <div class="pill" style="justify-content:center"><svg class="ic ok"><use href="#i-check"/></svg>Safe retries, never a second tx</div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 PRODUCT -->
+<section class="slide">
+  <div class="top"><div class="lock"><img src="../../public/brand/4orge-mark.svg" alt=""><span><span class="four">4</span><span class="orge">ORGE</span></span></div><div class="num">05 · Product</div></div>
+  <div class="body">
+    <div class="eyebrow">The product</div>
+    <h2 style="margin:16px 0 30px">Watch it run. <em>Decide, then sign.</em></h2>
+    <div style="display:grid;grid-template-columns:1.25fr 1fr;gap:26px">
+      <div class="card shot"><div class="chrome"><i></i><i></i><i></i><span>Runbook execution · review popup</span></div><img src="../../docs/screenshots/execution-wallet.png" alt=""></div>
+      <div style="display:grid;gap:22px">
+        <div class="card shot"><div class="chrome"><i></i><i></i><i></i><span>Tests · Hardhat 3 sandbox</span></div><div style="height:224px;overflow:hidden;position:relative"><img src="../../docs/screenshots/tests.png" alt="" style="position:absolute;width:1060px;left:-220px;top:-210px"></div></div>
+        <div class="card shot"><div class="chrome"><i></i><i></i><i></i><span>Deployment record · QIE Mainnet</span></div><img src="../../docs/screenshots/qie-mainnet-deployment.png" alt=""></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 SAFETY -->
+<section class="slide">
+  <div class="top"><div class="lock"><img src="../../public/brand/4orge-mark.svg" alt=""><span><span class="four">4</span><span class="orge">ORGE</span></span></div><div class="num">06 · Trust</div></div>
+  <div class="body">
+    <div class="eyebrow">Safety by design</div>
+    <h2 style="margin:16px 0 36px">Receipts, <em>not promises.</em></h2>
+    <div class="grid2">
+      <div class="card" style="padding:34px 38px">
+        <div style="font-size:18px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-bottom:22px">Before a deploy counts as a success</div>
+        <ul class="check">
+          <li><svg class="ic ok"><use href="#i-check"/></svg>It is a contract creation</li>
+          <li><svg class="ic ok"><use href="#i-check"/></svg>Sent by the approved deployer</li>
+          <li><svg class="ic ok"><use href="#i-check"/></svg>Byte-for-byte the reviewed code &amp; args</li>
+          <li><svg class="ic ok"><use href="#i-check"/></svg>Right chain, receipt status success</li>
+          <li><svg class="ic ok"><use href="#i-check"/></svg>Contract code present on-chain</li>
+        </ul>
+        <p style="font-size:19px;color:var(--muted);margin-top:8px">Tested: a forged transaction hash is rejected.</p>
+      </div>
+      <div style="display:grid;gap:18px">
+        <div class="card" style="padding:24px 28px;display:flex;gap:18px;align-items:flex-start"><svg class="ic" style="color:var(--accent);width:34px;height:34px"><use href="#i-lock"/></svg><div><div style="font-size:25px;font-weight:600">No keys, ever</div><div style="font-size:20px;color:var(--muted);margin-top:4px">Your wallet (MetaMask, Rabby) signs. 4ORGE never sees a key.</div></div></div>
+        <div class="card" style="padding:24px 28px;display:flex;gap:18px;align-items:flex-start"><svg class="ic" style="color:var(--accent);width:34px;height:34px"><use href="#i-shield"/></svg><div><div style="font-size:25px;font-weight:600">Untrusted code stays untrusted</div><div style="font-size:20px;color:var(--muted);margin-top:4px">Configs read, never run. Dependencies and compilers hash-checked.</div></div></div>
+        <div class="card" style="padding:24px 28px;display:flex;gap:18px;align-items:flex-start;border-color:#f4c7c3;background:#fff8f7"><svg class="ic" style="color:var(--bad);width:34px;height:34px"><use href="#i-wallet"/></svg><div><div style="font-size:25px;font-weight:600">Mainnet guarded</div><div style="font-size:20px;color:var(--muted);margin-top:4px">Locked by default, then a review and a typed <b class="mono">MAINNET</b>.</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 BUILT FOR QIE -->
+<section class="slide">
+  <div class="top"><div class="lock"><img src="../../public/brand/4orge-mark.svg" alt=""><span><span class="four">4</span><span class="orge">ORGE</span></span></div><div class="num">07 · QIE-native</div></div>
+  <div class="body">
+    <div class="eyebrow">Built for QIE</div>
+    <h2 style="margin:16px 0 34px">Not just "EVM-compatible". <em>QIE-native.</em></h2>
+    <div class="grid3">
+      <div class="card tile"><div class="badge"><svg class="ic"><use href="#i-net"/></svg></div><h3>Networks</h3><p>Testnet 1983 and Mainnet 1990 built in. Chain ID verified live; several RPCs, each must prove the chain.</p></div>
+      <div class="card tile"><div class="badge"><svg class="ic"><use href="#i-shield"/></svg></div><h3>Explorer verification</h3><p>Exact compiler input submitted to QIE's explorer. Verified on mainnet.qie.digital.</p></div>
+      <div class="card tile" style="border-color:rgba(61,137,233,.5);box-shadow:0 0 0 5px rgba(61,137,233,.1)"><div class="badge"><svg class="ic"><use href="#i-id"/></svg></div><h3>QIE ID</h3><p>Use <b class="mono" style="color:var(--ink)">alice.qie</b> wherever an address is needed: resolved via QIE's resolver, pinned, shown in review.</p></div>
+    </div>
+    <div class="card" style="margin-top:28px;padding:22px 30px;display:flex;align-items:center;justify-content:space-between;font-size:23px">
+      <span><b>owner</b> <span class="mono" style="color:var(--muted)">address</span></span>
+      <span class="mono" style="font-size:24px">alice.qie</span>
+      <span style="color:var(--ok)">alice.qie → <span class="mono">0x1720…b174</span> ✓ pinned before signing</span>
+    </div>
+  </div>
+</section>
+
+<!-- 8 TRACTION -->
+<section class="slide">
+  <div class="top"><div class="lock"><img src="../../public/brand/4orge-mark.svg" alt=""><span><span class="four">4</span><span class="orge">ORGE</span></span></div><div class="num">08 · Proof</div></div>
+  <div class="body">
+    <div class="eyebrow">Proof, not plans</div>
+    <h2 style="margin:16px 0 30px">Live on <em>QIE Mainnet.</em></h2>
+    <div style="display:grid;grid-template-columns:1.15fr 1fr;gap:26px">
+      <div class="card" style="overflow:hidden">
+        <div style="padding:22px 28px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:28px;font-weight:600">AtlasGovernor</div><div class="mono" style="font-size:16px;color:var(--faint)">imported from GitHub · Foundry monorepo</div></div><span class="pill" style="color:var(--ok);background:var(--okbg);border-color:#bfe6cf">✓ Confirmed</span></div>
+        <table>
+          <tr><td class="k">Contract</td><td class="mono" style="font-size:19px">0x8b9e799f…6112fac366</td></tr>
+          <tr><td class="k">Network</td><td>QIE Mainnet · chain 1990</td></tr>
+          <tr><td class="k">Block</td><td class="mono">12128375</td></tr>
+          <tr><td class="k">Source</td><td style="color:var(--ok);font-weight:600">Verified on mainnet.qie.digital</td></tr>
+        </table>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+        <div class="card" style="padding:24px 26px"><div class="big">114</div><div style="font-size:20px;color:var(--muted);margin-top:8px">tests passing on the real atlaspad repo</div></div>
+        <div class="card" style="padding:24px 26px"><div class="big">90</div><div style="font-size:20px;color:var(--muted);margin-top:8px">tests passing on the real amen repo</div></div>
+        <div class="card" style="padding:24px 26px"><div class="big">105</div><div style="font-size:20px;color:var(--muted);margin-top:8px">automated 4ORGE tests in CI</div></div>
+        <div class="card" style="padding:24px 26px"><div class="big">0</div><div style="font-size:20px;color:var(--muted);margin-top:8px">private keys requested or stored</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 9 WHO -->
+<section class="slide">
+  <div class="top"><div class="lock"><img src="../../public/brand/4orge-mark.svg" alt=""><span><span class="four">4</span><span class="orge">ORGE</span></span></div><div class="num">09 · Who it's for</div></div>
+  <div class="body">
+    <div class="eyebrow">Who it's for</div>
+    <h2 style="margin:16px 0 40px">The on-ramp for <em>every builder on QIE.</em></h2>
+    <div class="grid3">
+      <div class="card tile"><div class="badge"><svg class="ic"><use href="#i-users"/></svg></div><h3>New QIE developers</h3><p>Ship a first contract from the browser, with no toolchain to assemble and guard rails at every step.</p></div>
+      <div class="card tile"><div class="badge"><svg class="ic"><use href="#i-list"/></svg></div><h3>Teams</h3><p>Reviewed, repeatable deployments instead of terminal improvisation, plus a permanent record of who deployed what.</p></div>
+      <div class="card tile"><div class="badge"><svg class="ic"><use href="#i-shield"/></svg></div><h3>Projects &amp; auditors</h3><p>Proof of exactly which code, compiler and arguments went on-chain, with verified source.</p></div>
+    </div>
+  </div>
+  <div class="foot">Every contract shipped through 4ORGE is a verified contract on QIE, which helps grow the ecosystem with trustworthy deployments.</div>
+</section>
+
+<!-- 10 ROADMAP -->
+<section class="slide">
+  <div class="top"><div class="lock"><img src="../../public/brand/4orge-mark.svg" alt=""><span><span class="four">4</span><span class="orge">ORGE</span></span></div><div class="num">10 · Roadmap</div></div>
+  <div class="body">
+    <div class="eyebrow">What's next</div>
+    <h2 style="margin:16px 0 40px">Roadmap</h2>
+    <div class="grid3">
+      <div class="card tile"><div class="pill" style="font-size:16px;padding:6px 14px;color:var(--ok);background:var(--okbg);border-color:#bfe6cf;margin-bottom:18px">Done</div><h3>Foundation</h3><p>Runbooks, sandboxed build &amp; test, receipt validation, Mainnet deployment, explorer verification, QIE ID in arguments.</p></div>
+      <div class="card tile"><div class="pill" style="font-size:16px;padding:6px 14px;color:var(--accent);background:var(--soft);border-color:#bcd5f6;margin-bottom:18px">Next</div><h3>Identity &amp; interaction</h3><p>QIE IDs on deployers and records, QIE Pass "verified deployer" badge, an ABI-driven contract console.</p></div>
+      <div class="card tile"><div class="pill" style="font-size:16px;padding:6px 14px;color:var(--warn);background:var(--warnbg);border-color:#f3d9a8;margin-bottom:18px">Later</div><h3>Scale</h3><p>Multi-contract Runbooks, CI/GitHub Actions with wallet approval, container-isolated runners, deeper Foundry support.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 11 CLOSE -->
+<section class="slide" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">
+  <img src="../../public/brand/4orge-mark.svg" alt="" style="height:130px;margin-bottom:34px">
+  <h1 style="font-size:80px">Make the safe way to ship on QIE<br><em>the fastest way.</em></h1>
+  <div style="display:flex;gap:16px;margin-top:46px">
+    <span class="pill mono" style="font-size:22px;padding:14px 26px;background:var(--ink);color:#fff;border-color:var(--ink)">4orge-production.up.railway.app</span>
+    <span class="pill mono" style="font-size:22px;padding:14px 26px">github.com/TeevincsCrypt/4orge</span>
+  </div>
+  <p class="lead" style="margin-top:30px;font-size:22px">QIE Blockchain Hackathon 3.0 · Developer Infrastructure · MIT licensed</p>
+</section>
+</body>
+</html>

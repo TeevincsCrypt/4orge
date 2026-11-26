@@ -58,6 +58,7 @@ The automated test suite includes a forged-hash attack, and 4ORGE rejects it.
 - QIE Testnet (chain 1983) is the default network. QIE Mainnet (chain 1990) is visible but **locked for deployments** unless the operator deliberately enables it.
 - The chain ID is verified live via `eth_chainId` before anything is prepared. Mismatching endpoints are refused.
 - Multiple QIE RPC endpoints are tried automatically, and each must prove the correct chain ID. The Network page shows the health and latency of every endpoint.
+- **QIE ID support:** any address argument can be a `name.qie`. It is resolved through QIE's official resolver, pinned, and shown as `name.qie → 0x…` in the review, so only the reviewed address is signed.
 - One-click "add / switch wallet to QIE Testnet" (EIP-3085 / EIP-3326), with detection of wallet/network mismatches.
 - Source verification is submitted to QIE's explorer through its Blockscout verification API, and it works on QIE Mainnet. On an explorer without that API, 4ORGE says *unsupported* rather than ever claiming a verification the explorer didn't confirm.
 

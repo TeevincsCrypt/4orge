@@ -42,3 +42,14 @@ On the Network page, enter an `https://` URL (plain `http://` is allowed only fo
 ## Local Hardhat network (development)
 
 For rehearsals, `npm run chain` starts a local EVM (chain 31337, funded test accounts). Start 4ORGE with `FORGE_ENABLE_LOCAL_CHAIN=true` to show it. The test account keys printed by Hardhat are public. Never use them on a real network.
+
+## QIE ID (name.qie)
+
+Wherever a constructor argument is an `address` (including `address[]` and tuple fields), you can type a **QIE ID** such as `alice.qie` instead of a `0x…` address. Both can be mixed freely.
+
+- **While you type**, the form previews the address the name points to on the selected network, or says it isn't registered.
+- **When the Runbook runs**, the *Validate constructor parameters* step looks each name up once, through QIE's official QIE Wallet MCP resolver (`https://mcp.qie.digital/mcp`, tool `qie_resolve_name`, which reads the QIE ID contracts on chain), and **pins** the result. Its summary shows `name.qie → 0x…`.
+- **Prepare** encodes only the pinned addresses and never looks a name up again. The review and wallet popups and the report list every `name.qie → 0x…`. A name repointed in the meantime can't change what you sign, and retrying the validate step looks names up afresh.
+- The resolver's answer is checked: only a well-formed, non-zero address is accepted, and an outage is reported as an error, never as "not registered".
+- QIE IDs exist on QIE Mainnet and QIE Testnet. On the local Hardhat chain, use a `0x` address.
+

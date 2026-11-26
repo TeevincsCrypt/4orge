@@ -216,6 +216,8 @@ export interface PreparedDeployment {
   constructorArgs: unknown[];
   constructorArgsEncoded: `0x${string}`;
   buildId: string;
+  /** QIE IDs used in the constructor arguments and the addresses they were pinned to. */
+  qieNames?: Record<string, `0x${string}`> | null;
 }
 
 export interface ExecutionContext {
@@ -224,6 +226,8 @@ export interface ExecutionContext {
   testRunId: string | null;
   contractName: string | null;
   constructorArgs: unknown[] | null;
+  /** QIE IDs resolved by deploy.validate-args, pinned for the rest of the execution. */
+  qieNames?: Record<string, `0x${string}`> | null;
   prepared: PreparedDeployment | null;
   txHash: `0x${string}` | null;
   deploymentId: string | null;

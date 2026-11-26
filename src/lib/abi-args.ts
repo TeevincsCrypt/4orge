@@ -12,6 +12,41 @@ export interface ArgError {
   message: string;
 }
 
+// ---------------------------------------------------------------- QIE ID (name.qie)
+/**
+ * QIE ID names (e.g. `alice.qie`) can stand in for an address. Parsing never
+ * looks a name up itself: the server resolves names once, on the deployment's
+ * network, and passes the resulting addresses in `names`, so the address that
+ * is reviewed and signed is exactly the one that was resolved.
+ */
+const QIE_NAME_RE = /^[a-z0-9][a-z0-9_-]{0,62}\.qie$/;
+
+export function looksLikeQieName(value: unknown): boolean {
+  return typeof value === "string" && value.trim().toLowerCase().endsWith(".qie");
+}
+
+/** Lower-cased, trimmed QIE ID, or null if it isn't a well-formed `name.qie`. */
+export function normalizeQieName(value: string): string | null {
+  const s = value.trim().toLowerCase();
+  return QIE_NAME_RE.test(s) ? s : null;
+}
+
+export interface ParseArgsOptions {
+  /** Resolved QIE IDs: normalized `name.qie` → 0x address. */
+  names?: Record<string, string>;
+  /** Accept names that are not in `names` yet (browser-side form checks). They are left as the name. */
+  allowUnresolvedNames?: boolean;
+  /** Called for every QIE ID found in an address position. */
+  onName?: (name: string) => void;
+}
+
+/** The distinct QIE IDs used in address positions of these constructor arguments. */
+export function collectQieNames(abi: AbiItem[], raw: unknown[]): string[] {
+  const found = new Set<string>();
+  parseConstructorArgs(abi, raw, { allowUnresolvedNames: true, onName: (n) => found.add(n) });
+  return [...found];
+}
+
 export type ParseArgsResult =
   | { ok: true; values: unknown[] }
   | { ok: false; errors: ArgError[] };
@@ -28,7 +63,7 @@ export function isPayableConstructor(abi: AbiItem[]): boolean {
   return getConstructor(abi)?.stateMutability === "payable";
 }
 
-export function parseConstructorArgs(abi: AbiItem[], raw: unknown[]): ParseArgsResult {
+export function parseConstructorArgs(abi: AbiItem[], raw: unknown[], opts: ParseArgsOptions = {}): ParseArgsResult {
   const inputs = constructorInputs(abi);
   const errors: ArgError[] = [];
   if (raw.length !== inputs.length) {
@@ -45,7 +80,7 @@ export function parseConstructorArgs(abi: AbiItem[], raw: unknown[]): ParseArgsR
   }
   const values = inputs.map((param, index) => {
     try {
-      return coerce(param, raw[index]);
+      return coerce(param, raw[index], opts);
     } catch (e) {
       errors.push({ index, name: param.name || `arg${index}`, message: (e as Error).message });
       return undefined;
@@ -54,7 +89,7 @@ export function parseConstructorArgs(abi: AbiItem[], raw: unknown[]): ParseArgsR
   return errors.length ? { ok: false, errors } : { ok: true, values };
 }
 
-function coerce(param: AbiParameter, value: unknown): unknown {
+function coerce(param: AbiParameter, value: unknown, opts: ParseArgsOptions): unknown {
   const type = param.type;
 
   const arrayMatch = type.match(/^(.*)\[(\d*)\]$/);
@@ -67,7 +102,7 @@ function coerce(param: AbiParameter, value: unknown): unknown {
     }
     return list.map((v, i) => {
       try {
-        return coerce(inner, v);
+        return coerce(inner, v, opts);
       } catch (e) {
         throw new Error(`item ${i}: ${(e as Error).message}`);
       }
@@ -85,12 +120,24 @@ function coerce(param: AbiParameter, value: unknown): unknown {
       throw new Error(`Expected a tuple of ${comps.length} values.`);
     }
     const arr = v;
-    return comps.map((c, i) => coerce(c, arr[i]));
+    return comps.map((c, i) => coerce(c, arr[i], opts));
   }
 
   if (type === "address") {
     const s = String(value ?? "").trim();
-    if (!isAddress(s, { strict: false })) throw new Error("Not a valid 0x address (40 hex characters).");
+    if (looksLikeQieName(s)) {
+      const name = normalizeQieName(s);
+      if (!name) throw new Error("Not a valid QIE ID. Use letters, digits, - or _ followed by .qie (e.g. alice.qie).");
+      opts.onName?.(name);
+      const resolved = opts.names?.[name];
+      if (resolved) {
+        if (!isAddress(resolved, { strict: false })) throw new Error(`${name} resolved to an invalid address.`);
+        return getAddress(resolved);
+      }
+      if (opts.allowUnresolvedNames) return name;
+      throw new Error(`${name} has not been resolved to an address.`);
+    }
+    if (!isAddress(s, { strict: false })) throw new Error("Not a valid 0x address (40 hex characters) or QIE ID (name.qie).");
     const body = s.slice(2);
     const mixedCase = /[a-f]/.test(body) && /[A-F]/.test(body);
     if (mixedCase && !isAddress(s, { strict: true })) {
@@ -184,7 +231,7 @@ export function describeParam(p: AbiParameter): string {
 
 export function placeholderFor(type: string): string {
   if (type.endsWith("]")) return '["…"]';
-  if (type === "address") return "0x…";
+  if (type === "address") return "0x… or name.qie";
   if (type === "bool") return "true / false";
   if (type.startsWith("uint") || type.startsWith("int")) return "e.g. 1000 or 1e18";
   if (type.startsWith("bytes")) return "0x…";

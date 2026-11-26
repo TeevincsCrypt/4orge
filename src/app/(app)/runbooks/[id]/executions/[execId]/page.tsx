@@ -216,6 +216,15 @@ function DeploymentSummary({ execution }: { execution: RunbookExecution }) {
     ["Network", <span key="n" className="flex items-center gap-2 text-text">{network.name} <span className="mono text-xs text-faint">chain {p.chainId}</span>{network.kind === "mainnet" && <Badge tone="warn">real funds</Badge>}</span>],
     ["Deployer", <HexValue key="d" value={p.from} full />],
     ["Constructor args", <span key="a" className="mono break-all text-xs text-text">{JSON.stringify(p.constructorArgs)}</span>],
+    ...(p.qieNames && Object.keys(p.qieNames).length
+      ? [["QIE IDs", (
+          <span key="q" className="flex flex-col gap-0.5 text-xs sm:items-end">
+            {Object.entries(p.qieNames).map(([n, addr]) => (
+              <span key={n} className="[overflow-wrap:anywhere]"><span className="font-medium text-text">{n}</span> <span className="text-faint">→</span> <span className="mono text-text">{addr}</span></span>
+            ))}
+          </span>
+        )] as [string, React.ReactNode]]
+      : []),
     ["Gas limit", <span key="g" className="mono text-xs text-text">{p.gas ?? "wallet estimate"}</span>],
     ["Max cost", <span key="m" className="text-text">{p.estimatedCostWei ? `${formatEther(BigInt(p.estimatedCostWei))} ${sym}` : "—"}</span>],
     ["Deployer balance", <span key="b" className="text-text">{p.balanceWei ? `${formatEther(BigInt(p.balanceWei))} ${sym}` : "—"}</span>],

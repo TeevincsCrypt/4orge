@@ -132,8 +132,8 @@ function DeployWizard() {
             </Card>
             {contract && (
               <Card padded={false}>
-                <CardHeader title="2 · Constructor arguments" description="Validated against the compiled ABI as you type." />
-                <div className="p-5"><ArgsForm abi={contract.abi} values={args} onChange={setArgs} /></div>
+                <CardHeader title="2 · Constructor arguments" description="Validated against the compiled ABI as you type. Address fields take a 0x address or a QIE ID (name.qie)." />
+                <div className="p-5"><ArgsForm abi={contract.abi} values={args} onChange={setArgs} network={networkId} /></div>
               </Card>
             )}
             <Card padded={false}>

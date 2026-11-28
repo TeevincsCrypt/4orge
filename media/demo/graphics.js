@@ -30,9 +30,9 @@ const pages = {
   bg: { w: 1920, h: 1080, html: `<div class="canvas">
       <div class="glow" style="width:1100px;height:1100px;right:-380px;top:-520px;background:radial-gradient(circle,rgba(61,137,233,.22),rgba(61,137,233,0) 65%)"></div>
       <div class="glow" style="width:900px;height:900px;left:-380px;bottom:-480px;background:radial-gradient(circle,rgba(246,200,220,.5),rgba(246,200,220,0) 65%)"></div>
-      <div style="position:absolute;left:160px;top:64px;width:1600px;height:856px;border-radius:18px;background:#fff;box-shadow:0 2px 6px rgba(22,22,40,.08),0 40px 80px -30px rgba(22,22,40,.35)"></div>
-      <div style="position:absolute;left:160px;top:13px">${lockup(28)}</div>
-      <div style="position:absolute;right:160px;top:20px;font-family:M;font-size:17px;color:#8a8d96">4orge.xyz · live demo</div>
+      <div style="position:absolute;left:160px;top:80px;width:1600px;height:770px;border-radius:18px;background:#fff;box-shadow:0 2px 6px rgba(22,22,40,.08),0 40px 80px -30px rgba(22,22,40,.35)"></div>
+      <div style="position:absolute;left:160px;top:22px">${lockup(28)}</div>
+      <div style="position:absolute;right:160px;top:30px;font-family:M;font-size:17px;color:#8a8d96">4orge.xyz · live demo</div>
     </div>` },
   title: { w: 1920, h: 1080, html: `<div class="canvas" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">
       <div class="glow" style="width:1200px;height:1200px;left:50%;top:50%;transform:translate(-50%,-55%);background:radial-gradient(circle,rgba(61,137,233,.22),rgba(61,137,233,0) 62%)"></div>
@@ -67,7 +67,10 @@ function chip(label, badge, tone = "#3d89e9") {
   const p = await b.newPage({ viewport: { width: 1920, height: 1080 } });
   const shot = async (name, html, w, h, transparent) => {
     await p.setViewportSize({ width: w, height: h });
-    await p.setContent(`<!doctype html><html><head><meta charset="utf-8"><style>${base} html,body{background:${transparent ? "transparent" : "#f1f1f7"}}</style></head><body>${html}</body></html>`, { waitUntil: "load" });
+    // Rendered from a file so the file:// fonts load (they don't from about:blank).
+    const file = path.join(outDir, `_${name}.html`);
+    fs.writeFileSync(file, `<!doctype html><html><head><meta charset="utf-8"><style>${base} html,body{background:${transparent ? "transparent" : "#f1f1f7"}}</style></head><body>${html}</body></html>`);
+    await p.goto("file://" + file, { waitUntil: "load" });
     await p.evaluate(() => document.fonts.ready);
     if (transparent) {
       const el = await p.$("body > div");
@@ -75,6 +78,7 @@ function chip(label, badge, tone = "#3d89e9") {
     } else {
       await p.screenshot({ path: path.join(outDir, `${name}.png`) });
     }
+    fs.rmSync(file);
   };
   for (const [name, pg] of Object.entries(pages)) await shot(name, pg.html, pg.w, pg.h, false);
   for (const [i, seg] of tl.segments.entries()) {

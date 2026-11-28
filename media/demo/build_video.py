@@ -2,9 +2,9 @@
 
 Usage: build_video.py <timeline.json> <gfx-dir> <mix.wav> <work-dir> <out.mp4> <recA.mp4> <recB.mp4>
 
-- Each clip is cropped above the Windows taskbar (1280x684), the bottom of the
-  sidebar is blurred (screen-recorder controls and the account e-mail), it is
-  sped up per the timeline and scaled to 1600x855 at 30 fps.
+- Each clip is cropped above the screen-recorder toolbar and the Windows
+  taskbar (1280x616), the sidebar's account card is blurred (e-mail), it is
+  sped up per the timeline and scaled to 1600x770 at 30 fps.
 - The screen sits in a rounded window on the branded canvas, with a step chip,
   burned-in captions (ASS, Geist), title and closing cards, and the mixed audio
   normalised to -16 LUFS.
@@ -17,8 +17,8 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 FPS = 30
-W, H = 1600, 856
-X, Y = 160, 64
+W, H = 1600, 770
+X, Y = 160, 80
 ROOT = Path(__file__).resolve().parents[2]
 FONTDIR = ROOT / "node_modules/geist/dist/fonts/geist-sans"
 
@@ -45,7 +45,7 @@ for s in tl["segments"]:
         nframes = frame(end) - frame(t)
         path = work / f"clip_{s['id']}_{k}.mp4"
         vf = (
-            "crop=1280:684:0:0,split[a][b];[b]crop=270:124:0:560,boxblur=14:3[bl];[a][bl]overlay=0:560,"
+            "crop=1280:616:0:0,split[a][b];[b]crop=262:62:0:554,boxblur=14:3[bl];[a][bl]overlay=0:554,"
             f"setpts=(PTS-STARTPTS)/{c['speed']:.5f},fps={FPS},scale={W}:{H}:flags=lanczos,"
             "tpad=stop_mode=clone:stop_duration=5,format=yuv420p"
         )
@@ -75,7 +75,7 @@ ass = [
     "[V4+ Styles]",
     "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
     # dark ink on the light canvas below the window
-    "Style: Cap,Geist Medium,38,&H001D1614,&H001D1614,&H00F7F1F1,&H00F7F1F1,0,0,0,0,100,100,0,0,1,0,0,2,250,250,38,1",
+    "Style: Cap,Geist Medium,40,&H001D1614,&H001D1614,&H00F7F1F1,&H00F7F1F1,0,0,0,0,100,100,0,0,1,0,0,2,240,240,78,1",
     "", "[Events]", "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
 ]
 for s in tl["segments"]:
@@ -96,7 +96,7 @@ ff_end = sign["end"]
 inputs = ["-loop", "1", "-framerate", str(FPS), "-t", str(total), "-i", str(gfx / "bg.png"),
           "-i", str(screen),
           "-loop", "1", "-framerate", str(FPS), "-t", str(total), "-i", str(work / "mask.png"),
-          "-loop", "1", "-framerate", str(FPS), "-t", str(title_end + 1), "-i", str(gfx / "title.png"),
+          "-loop", "1", "-framerate", str(FPS), "-t", str(title_end + 1.5), "-i", str(gfx / "title.png"),
           "-loop", "1", "-framerate", str(FPS), "-t", str(total - outro["start"] + 1), "-i", str(gfx / "outro.png")]
 chips = [s for s in segs if s["chip"]]
 for s in chips:
@@ -113,10 +113,11 @@ f.append(f"[0:v][scr]overlay={X}:{Y}:eof_action=pass[v0]")
 cur = "v0"
 for i, s in enumerate(chips):
     nxt = f"vc{i}"
-    f.append(f"[{cur}][{n_chip0 + i}:v]overlay=x=(main_w-overlay_w)/2:y=11:enable='between(t,{s['start'] + 0.05},{s['end'] - 0.05})'[{nxt}]")
+    f.append(f"[{cur}][{n_chip0 + i}:v]overlay=x=(main_w-overlay_w)/2:y=19:enable='between(t,{s['start'] + 0.05},{s['end'] - 0.05})'[{nxt}]")
     cur = nxt
 f.append(f"[{cur}][{ff_idx}:v]overlay=x=(main_w-overlay_w)/2:y={Y + H - 70}:enable='between(t,{ff_start + 0.1},{ff_end - 0.1})'[vff]")
-f.append(f"[3:v]format=rgba,fade=out:st={title_end - 0.45}:d=0.45:alpha=1[ti]")
+# The title fades out over the first half-second of footage (no empty window).
+f.append(f"[3:v]format=rgba,fade=out:st={title_end - 0.05}:d=0.5:alpha=1[ti]")
 f.append(f"[vff][ti]overlay=0:0:eof_action=pass[vt]")
 f.append(f"[4:v]format=rgba,fade=in:st=0:d=0.6:alpha=1,setpts=PTS-STARTPTS+{outro['start'] - 0.3}/TB[ou]")
 f.append(f"[vt][ou]overlay=0:0:eof_action=pass[vo]")

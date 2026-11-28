@@ -1,0 +1,305 @@
+{
+  "_comment": "Demo video script. Sources: A = full walkthrough recording, B = explorer + workspace tour. Times in seconds. Each line is [spoken text for the voice, caption text]. Spoken text uses phonetic spellings (Forge, Q I E, main net).",
+  "segments": [
+    {
+      "id": "landing",
+      "chip": "4orge.xyz",
+      "clips": [
+        [
+          "A",
+          0,
+          28
+        ]
+      ],
+      "lines": [
+        [
+          "Shipping a smart contract usually means juggling compilers, scripts, R.P.C. settings, wallets and spreadsheets.",
+          "Shipping a smart contract usually means juggling compilers, scripts, RPC settings, wallets and spreadsheets."
+        ],
+        [
+          "Forge puts that whole release process into one workspace, built for Q I E Blockchain.",
+          "4ORGE puts that whole release process into one workspace, built for QIE Blockchain."
+        ]
+      ]
+    },
+    {
+      "id": "signin",
+      "chip": "Sign in",
+      "clips": [
+        [
+          "A",
+          28,
+          39
+        ]
+      ],
+      "lines": [
+        [
+          "Sign in with email or GitHub, and you get your own private workspace.",
+          "Sign in with email or GitHub, and you get your own private workspace."
+        ]
+      ]
+    },
+    {
+      "id": "wallet",
+      "chip": "Connect wallet",
+      "clips": [
+        [
+          "A",
+          40,
+          66
+        ]
+      ],
+      "lines": [
+        [
+          "Next, connect a wallet. Here it's Rabby, on Q I E main net.",
+          "Next, connect a wallet. Here it's Rabby, on QIE Mainnet."
+        ],
+        [
+          "Forge never asks for a seed phrase or a private key. Your wallet stays in control.",
+          "4ORGE never asks for a seed phrase or a private key. Your wallet stays in control."
+        ]
+      ]
+    },
+    {
+      "id": "import",
+      "chip": "Import from GitHub",
+      "clips": [
+        [
+          "A",
+          68,
+          104
+        ]
+      ],
+      "lines": [
+        [
+          "Let's bring in a real project: atlas pad, a Foundry monorepo, straight from GitHub.",
+          "Let's bring in a real project: atlaspad, a Foundry monorepo, straight from GitHub."
+        ],
+        [
+          "Forge streams the repository and reads its config files as text. It never runs them.",
+          "4ORGE streams the repository and reads its config files as text. It never runs them."
+        ],
+        [
+          "Even big repositories are fine: only Solidity, test and config files are kept.",
+          "Even big repositories are fine: only Solidity, test and config files are kept."
+        ]
+      ]
+    },
+    {
+      "id": "project",
+      "chip": "Project detected",
+      "clips": [
+        [
+          "A",
+          104,
+          132
+        ]
+      ],
+      "lines": [
+        [
+          "It finds every contract, test and dependency, and picks up the compiler settings from foundry dot toml.",
+          "It finds every contract, test and dependency, and picks up the compiler settings from foundry.toml:"
+        ],
+        [
+          "Solidity zero point eight point twenty-eight, optimizer on, Cancun.",
+          "Solidity 0.8.28, optimizer on, Cancun."
+        ]
+      ]
+    },
+    {
+      "id": "setup",
+      "chip": "Start a deployment",
+      "clips": [
+        [
+          "A",
+          133,
+          151
+        ],
+        [
+          "A",
+          172,
+          199
+        ]
+      ],
+      "lines": [
+        [
+          "Now, start a deployment. Pick the contract, Atlas Governor, and fill in its constructor arguments.",
+          "Now, start a deployment. Pick the contract, AtlasGovernor, and fill in its constructor arguments."
+        ],
+        [
+          "They're type-checked against the A.B.I. as you type, and address fields also accept Q I E I D names.",
+          "They're type-checked against the ABI as you type, and address fields also accept QIE ID names."
+        ],
+        [
+          "Then choose Q I E main net, and start.",
+          "Then choose QIE Mainnet, and start."
+        ]
+      ]
+    },
+    {
+      "id": "runbook",
+      "chip": "Runbook running",
+      "clips": [
+        [
+          "A",
+          199,
+          255
+        ]
+      ],
+      "lines": [
+        [
+          "Forge saves this as a Runbook, and runs it step by step.",
+          "4ORGE saves this as a Runbook, and runs it step by step."
+        ],
+        [
+          "It verifies the chain I D, compiles with the official Solidity compiler, and runs all one hundred and fourteen tests in a sandbox.",
+          "It verifies the chain ID, compiles with the official Solidity compiler, and runs all 114 tests in a sandbox."
+        ],
+        [
+          "Every step is logged on the right, so you can see exactly what happened, and when.",
+          "Every step is logged on the right, so you can see exactly what happened, and when."
+        ],
+        [
+          "If a single test fails, nothing gets deployed.",
+          "If a single test fails, nothing gets deployed."
+        ]
+      ]
+    },
+    {
+      "id": "review",
+      "chip": "Your review",
+      "clips": [
+        [
+          "A",
+          255,
+          275
+        ]
+      ],
+      "lines": [
+        [
+          "Then it stops for the two things only you can do. First, review: the contract, network, deployer, arguments and maximum gas cost.",
+          "Then it stops for the two things only you can do. First, review: the contract, network, deployer, arguments and maximum gas cost."
+        ],
+        [
+          "Because this is main net, you have to type main net to continue.",
+          "Because this is Mainnet, you have to type MAINNET to continue."
+        ]
+      ]
+    },
+    {
+      "id": "sign",
+      "chip": "Wallet signs",
+      "clips": [
+        [
+          "A",
+          275,
+          292,
+          1.3
+        ],
+        [
+          "A",
+          292,
+          330,
+          6
+        ]
+      ],
+      "lines": [
+        [
+          "Second, sign. Rabby shows its own confirmation, and nothing is sent until you approve it there.",
+          "Second, sign. Rabby shows its own confirmation, and nothing is sent until you approve it there."
+        ],
+        [
+          "Then Q I E confirms the transaction.",
+          "Then QIE confirms the transaction."
+        ]
+      ]
+    },
+    {
+      "id": "verified",
+      "chip": "Verified on-chain",
+      "clips": [
+        [
+          "A",
+          330,
+          352
+        ]
+      ],
+      "lines": [
+        [
+          "Forge doesn't just trust a transaction hash. It reads the receipt back from the chain, and checks the sender, the exact bytecode, and the status.",
+          "4ORGE doesn't just trust a transaction hash. It reads the receipt back from the chain, and checks the sender, the exact bytecode, and the status."
+        ],
+        [
+          "Then it records the deployment, and verifies the source code on Q I E's explorer.",
+          "Then it records the deployment, and verifies the source code on QIE's explorer."
+        ]
+      ]
+    },
+    {
+      "id": "explorer",
+      "chip": "mainnet.qie.digital",
+      "clips": [
+        [
+          "A",
+          352,
+          376
+        ],
+        [
+          "B",
+          12,
+          40
+        ]
+      ],
+      "lines": [
+        [
+          "And here it is, on the Q I E main net explorer.",
+          "And here it is, on the QIE Mainnet explorer."
+        ],
+        [
+          "The transaction succeeded, and the Atlas Governor contract is live.",
+          "The transaction succeeded, and the AtlasGovernor contract is live."
+        ],
+        [
+          "Its source code is verified too, so anyone can read exactly what was deployed.",
+          "Its source code is verified too, so anyone can read exactly what was deployed."
+        ]
+      ]
+    },
+    {
+      "id": "tour",
+      "chip": "Your workspace",
+      "clips": [
+        [
+          "B",
+          42,
+          89
+        ]
+      ],
+      "lines": [
+        [
+          "Everything stays tracked: your dashboard, Runbooks you can run again, a permanent deployment history, every contract, and live network health.",
+          "Everything stays tracked: your dashboard, Runbooks you can run again, a permanent deployment history, every contract, and live network health."
+        ],
+        [
+          "Projects, Runbooks and deployments all link back to the chain, so your team always knows what's live, and where.",
+          "Projects, Runbooks and deployments all link back to the chain, so your team always knows what's live, and where."
+        ]
+      ]
+    },
+    {
+      "id": "outro",
+      "chip": null,
+      "clips": [],
+      "lines": [
+        [
+          "Forge. Compile, test and deploy on Q I E, from one workspace.",
+          "4ORGE. Compile, test and deploy on QIE, from one workspace."
+        ],
+        [
+          "Your wallet signs, and the chain confirms. Try it today.",
+          "Your wallet signs, and the chain confirms. Try it today."
+        ]
+      ]
+    }
+  ]
+}

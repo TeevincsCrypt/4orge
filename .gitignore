@@ -58,3 +58,4 @@ media/thread/out/
 /media/mainnet/assets/
 /media/mainnet/out/
 /media/demo/out/
+__pycache__/

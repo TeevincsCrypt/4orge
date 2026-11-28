@@ -90,8 +90,9 @@ The automated test suite includes a forged-hash attack, and 4ORGE rejects it.
 - **Hosting:** any Node.js server with a persistent disk. Currently deployed on Railway.
 
 ## Quality & testing
-- **59 unit tests:** Runbook validation, path safety, ABI argument parsing, project detection, test-output parsing, network configuration, compiler version selection, RPC error handling, and storage isolation.
-- **7 integration tests:** real compilation (including OpenZeppelin from npm), real compiler errors, and real Hardhat Solidity and TypeScript test runs, including failure detection.
+- **90 unit tests:** Runbook validation and Mainnet safeguards, path safety, ABI argument parsing, QIE ID parsing and resolver handling, project detection, test-output parsing, network configuration, compiler version selection, RPC error handling, storage isolation, archive streaming and test-sandbox file permissions.
+- **14 integration tests:** real compilation (including OpenZeppelin from npm), real compiler errors, real Hardhat Solidity and TypeScript test runs, forge-std from its pinned release, a large-input compiler regression, cross-disk caches, and QIE ID pinning in real Runbooks.
+- **Real repositories:** atlaspad (Foundry monorepo) passes 114/114 tests in 4ORGE; amen passes 90 (2 fork tests skip themselves by design).
 - **1 end-to-end test** in a real browser against a real local EVM:
   - the full flow: create → compile → test → Runbook → review → wallet network switch → sign → on-chain validation → record;
   - the deployed contract is read back from the chain;
@@ -100,7 +101,7 @@ The automated test suite includes a forged-hash attack, and 4ORGE rejects it.
 - TypeScript, ESLint and the production build all pass cleanly. CI runs on every push.
 
 ## Current status
-- ✅ Live on Railway with Supabase sign-in and private per-user workspaces.
+- ✅ Live at https://4orge.xyz (Railway) with Supabase sign-in and private per-user workspaces.
 - ✅ The hosted server reaches QIE Testnet (chain 1983 verified live).
 - ✅ The complete deployment flow is proven end-to-end against a real EVM.
 - ✅ **First real deployment on QIE Mainnet:** AtlasGovernor, imported from a GitHub Foundry repository, compiled in 4ORGE (its 114 tests pass in 4ORGE's test runner), signed by the owner's wallet and validated on-chain. Contract [`0x8b9e799f6bb4b9b120de4293f8482c6112fac366`](https://mainnet.qie.digital/address/0x8b9e799f6bb4b9b120de4293f8482c6112fac366?tab=contract), transaction [`0xec7eca64…`](https://mainnet.qie.digital/tx/0xec7eca641f1ce2c3643952ac556eabb03a2e0c758d3b848fde09a6338c0faa55), block 12128375.
@@ -121,7 +122,7 @@ The automated test suite includes a forged-hash attack, and 4ORGE rejects it.
 - Full Foundry compatibility (`foundry.toml` profiles, `lib/` submodules beyond forge-std) and library linking.
 
 ## Links
-- **Live app:** https://4orge-production.up.railway.app
+- **Live app:** https://4orge.xyz
 - **Source code:** https://github.com/TeevincsCrypt/4orge
 - **First QIE Mainnet deployment:** https://mainnet.qie.digital/address/0x8b9e799f6bb4b9b120de4293f8482c6112fac366?tab=contract
 - **Docs:** README, plus in-app **Documentation** (Getting started, Runbooks, QIE networks, Architecture & security, API, Deployment guide)
